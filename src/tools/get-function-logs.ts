@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { getProject } from "../keystore.js";
+import { formatApiError, projectNotFound } from "../errors.js";
 
 export const getFunctionLogsSchema = {
   project_id: z.string().describe("The project ID"),
@@ -17,17 +18,7 @@ export async function handleGetFunctionLogs(args: {
   tail?: number;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   const project = getProject(args.project_id);
-  if (!project) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: Project \`${args.project_id}\` not found in key store. Provision a project first with \`provision_postgres_project\`.`,
-        },
-      ],
-      isError: true,
-    };
-  }
+  if (!project) return projectNotFound(args.project_id);
 
   const tail = args.tail || 50;
   const res = await apiRequest(
@@ -40,14 +31,7 @@ export async function handleGetFunctionLogs(args: {
     },
   );
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "fetching function logs");
 
   const body = res.body as { logs: Array<{ timestamp: string; message: string }> };
   const logs = body.logs || [];

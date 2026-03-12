@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { saveProject } from "../keystore.js";
+import { formatApiError } from "../errors.js";
 
 export const bundleDeploySchema = {
   name: z.string().describe("App name (used as project name and default subdomain)"),
@@ -111,14 +112,7 @@ export async function handleBundleDeploy(args: {
     return { content: [{ type: "text", text: lines.join("\n") }] };
   }
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "deploying bundle");
 
   const body = res.body as {
     project_id: string;

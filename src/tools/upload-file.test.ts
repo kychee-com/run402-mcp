@@ -94,6 +94,7 @@ describe("upload_file tool", () => {
       content: "x",
     });
     assert.equal(result.isError, true);
-    assert.ok(result.content[0]!.text.includes("Upload Error"));
+    assert.ok(result.content[0]!.text.includes("uploading file"));
+    assert.ok(result.content[0]!.text.includes("Upload failed"));
   });
 });

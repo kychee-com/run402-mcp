@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { getProject } from "../keystore.js";
+import { formatApiError, projectNotFound } from "../errors.js";
 
 export const listFilesSchema = {
   project_id: z.string().describe("The project ID"),
@@ -12,17 +13,7 @@ export async function handleListFiles(args: {
   bucket: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   const project = getProject(args.project_id);
-  if (!project) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: Project \`${args.project_id}\` not found in key store. Provision a project first.`,
-        },
-      ],
-      isError: true,
-    };
-  }
+  if (!project) return projectNotFound(args.project_id);
 
   const res = await apiRequest(`/storage/v1/object/list/${args.bucket}`, {
     method: "GET",
@@ -32,14 +23,7 @@ export async function handleListFiles(args: {
     },
   });
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "listing files");
 
   const body = res.body as {
     objects: Array<{ key: string; size: number; last_modified: string }>;

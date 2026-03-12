@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { getProject } from "../keystore.js";
+import { formatApiError, projectNotFound } from "../errors.js";
 
 export const claimSubdomainSchema = {
   name: z
@@ -24,12 +25,7 @@ export async function handleClaimSubdomain(args: {
 
   if (args.project_id) {
     const project = getProject(args.project_id);
-    if (!project) {
-      return {
-        content: [{ type: "text", text: `Error: Project "${args.project_id}" not found in key store. Provision a project first.` }],
-        isError: true,
-      };
-    }
+    if (!project) return projectNotFound(args.project_id);
     authHeader = { Authorization: `Bearer ${project.service_key}` };
   }
 
@@ -39,14 +35,7 @@ export async function handleClaimSubdomain(args: {
     body: { name: args.name, deployment_id: args.deployment_id },
   });
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "claiming subdomain");
 
   const body = res.body as {
     name: string;
@@ -92,12 +81,7 @@ export async function handleDeleteSubdomain(args: {
 
   if (args.project_id) {
     const project = getProject(args.project_id);
-    if (!project) {
-      return {
-        content: [{ type: "text", text: `Error: Project "${args.project_id}" not found in key store. Provision a project first.` }],
-        isError: true,
-      };
-    }
+    if (!project) return projectNotFound(args.project_id);
     authHeader = { Authorization: `Bearer ${project.service_key}` };
   }
 
@@ -106,14 +90,7 @@ export async function handleDeleteSubdomain(args: {
     headers: authHeader,
   });
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "deleting subdomain");
 
   return {
     content: [{ type: "text", text: `## Subdomain Released\n\nSubdomain \`${args.name}\` has been deleted. The URL \`https://${args.name}.run402.com\` is no longer active.` }],

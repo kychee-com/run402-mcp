@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { getProject, saveProject } from "../keystore.js";
+import { formatApiError, projectNotFound } from "../errors.js";
 
 export const renewSchema = {
   project_id: z.string().describe("The project ID to renew"),
@@ -15,17 +16,7 @@ export async function handleRenew(args: {
   tier?: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   const project = getProject(args.project_id);
-  if (!project) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: Project \`${args.project_id}\` not found in key store. Provision a project first.`,
-        },
-      ],
-      isError: true,
-    };
-  }
+  if (!project) return projectNotFound(args.project_id);
 
   const tier = args.tier || project.tier;
 
@@ -61,14 +52,7 @@ export async function handleRenew(args: {
     return { content: [{ type: "text", text: lines.join("\n") }] };
   }
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Renew Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "renewing project");
 
   const body = res.body as {
     project_id: string;

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
+import { formatApiError } from "../errors.js";
 
 export const checkBalanceSchema = {
   wallet: z
@@ -16,14 +17,7 @@ export async function handleCheckBalance(args: {
     method: "GET",
   });
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "checking balance");
 
   const body = res.body as {
     wallet: string;

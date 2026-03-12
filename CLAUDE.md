@@ -61,6 +61,21 @@ Every tool in `src/tools/` exports two things:
 
 Tools that require payment (provision, renew, deploy_site, bundle_deploy) return 402 payment details as **informational text** (not errors) so the LLM can reason about payment flow.
 
+### Error Handling Pattern
+
+All tools use shared error helpers from `src/errors.ts`:
+
+- **`formatApiError(res, context)`** — Formats a non-OK API response into the standard `{ content: [...], isError: true }` shape. Includes HTTP status, extracts `hint`/`retry_after`/`renew_url`/`usage`/`expires_at` from the response body, and adds actionable guidance based on status code. The `context` parameter is a short verb phrase describing what failed (e.g. "running SQL").
+
+- **`projectNotFound(projectId)`** — Returns a consistent "project not found in key store" error with guidance to provision first.
+
+When adding a new tool, use these helpers instead of inline error formatting:
+```ts
+if (!project) return projectNotFound(args.project_id);
+// ...
+if (!res.ok) return formatApiError(res, "doing the thing");
+```
+
 ### Test Pattern
 
 Tests mock `globalThis.fetch` and use temp directories for keystore isolation. Each test file follows:

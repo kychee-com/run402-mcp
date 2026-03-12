@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
+import { formatApiError } from "../errors.js";
 
 export const getQuoteSchema = {};
 
@@ -9,14 +10,7 @@ export async function handleGetQuote(_args: Record<string, never>): Promise<{
 }> {
   const res = await apiRequest("/v1/projects", { method: "GET" });
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "getting quote");
 
   const body = res.body as {
     tiers: Record<

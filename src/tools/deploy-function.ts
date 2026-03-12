@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { getProject } from "../keystore.js";
+import { formatApiError, projectNotFound } from "../errors.js";
 
 export const deployFunctionSchema = {
   project_id: z.string().describe("The project ID to deploy the function to"),
@@ -31,17 +32,7 @@ export async function handleDeployFunction(args: {
   deps?: string[];
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   const project = getProject(args.project_id);
-  if (!project) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: Project \`${args.project_id}\` not found in key store. Provision a project first with \`provision_postgres_project\`.`,
-        },
-      ],
-      isError: true,
-    };
-  }
+  if (!project) return projectNotFound(args.project_id);
 
   const res = await apiRequest(`/admin/v1/projects/${args.project_id}/functions`, {
     method: "POST",
@@ -68,14 +59,7 @@ export async function handleDeployFunction(args: {
     };
   }
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "deploying function");
 
   const body = res.body as {
     name: string;

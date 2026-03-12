@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
+import { formatApiError } from "../errors.js";
 
 export const generateImageSchema = {
   prompt: z
@@ -52,14 +53,7 @@ export async function handleGenerateImage(args: {
     return { content: [{ type: "text", text: lines.join("\n") }] };
   }
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "generating image");
 
   const body = res.body as {
     image: string;

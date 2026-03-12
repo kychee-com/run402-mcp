@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { saveProject } from "../keystore.js";
+import { formatApiError } from "../errors.js";
 
 export const forkAppSchema = {
   version_id: z.string().describe("The app version ID to fork (from browse_apps)"),
@@ -59,14 +60,7 @@ export async function handleForkApp(args: {
     return { content: [{ type: "text", text: lines.join("\n") }] };
   }
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "forking app");
 
   const body = res.body as {
     project_id: string;

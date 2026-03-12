@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
 import { getProject } from "../keystore.js";
+import { formatApiError, projectNotFound } from "../errors.js";
 
 export const getSchemaSchema = {
   project_id: z.string().describe("The project ID"),
@@ -10,17 +11,7 @@ export async function handleGetSchema(args: {
   project_id: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   const project = getProject(args.project_id);
-  if (!project) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: Project \`${args.project_id}\` not found in key store. Provision a project first with \`provision_postgres_project\`.`,
-        },
-      ],
-      isError: true,
-    };
-  }
+  if (!project) return projectNotFound(args.project_id);
 
   const res = await apiRequest(`/admin/v1/projects/${args.project_id}/schema`, {
     method: "GET",
@@ -29,14 +20,7 @@ export async function handleGetSchema(args: {
     },
   });
 
-  if (!res.ok) {
-    const body = res.body as Record<string, unknown>;
-    const msg = (body.error as string) || `HTTP ${res.status}`;
-    return {
-      content: [{ type: "text", text: `Error: ${msg}` }],
-      isError: true,
-    };
-  }
+  if (!res.ok) return formatApiError(res, "fetching schema");
 
   const body = res.body as {
     schema: string;
