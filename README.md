@@ -2,7 +2,7 @@
   <img src=".github/logo.svg" width="120" alt="run402 logo">
 </p>
 
-<h1 align="center">run402-mcp</h1>
+<h1 align="center">run402 — MCP Server, CLI & OpenClaw Skill</h1>
 
 [![Tests](https://github.com/kychee-com/run402/actions/workflows/test.yml/badge.svg)](https://github.com/kychee-com/run402/actions/workflows/test.yml)
 [![CodeQL](https://github.com/kychee-com/run402/actions/workflows/codeql.yml/badge.svg)](https://github.com/kychee-com/run402/actions/workflows/codeql.yml)
