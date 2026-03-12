@@ -28,7 +28,6 @@ export async function handleWalletStatus(
       `| Field | Value |`,
       `|-------|-------|`,
       `| address | \`${wallet.address}\` |`,
-      `| network | ${wallet.network || "base-sepolia"} |`,
       `| created | ${wallet.created || "unknown"} |`,
       `| funded | ${wallet.funded ? "yes" : "no"} |`,
     ];

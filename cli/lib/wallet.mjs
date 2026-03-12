@@ -1,4 +1,4 @@
-import { readWallet, saveWallet, API } from "./config.mjs";
+import { readWallet, saveWallet, WALLET_FILE, API } from "./config.mjs";
 
 const HELP = `run402 wallet — Manage your x402 wallet
 
@@ -14,8 +14,8 @@ Subcommands:
 
 Notes:
   - Wallet is stored locally at ~/.run402/wallet.json
-  - Network: Base Sepolia (testnet) — uses USDC for x402 payments
-  - You need to create and fund a wallet before deploying or generating images
+  - The wallet works on any EVM chain (currently Run402 uses Base Mainnet and Sepolia for testnet)
+  - You need to create and fund a wallet before any x402 transaction with Run402
 
 Examples:
   run402 wallet create
@@ -37,7 +37,7 @@ async function status() {
     console.log(JSON.stringify({ status: "no_wallet", message: "No wallet found. Run: run402 wallet create" }));
     return;
   }
-  console.log(JSON.stringify({ status: "ok", address: w.address, network: w.network || "base-sepolia", created: w.created, funded: w.funded || false }));
+  console.log(JSON.stringify({ status: "ok", address: w.address, created: w.created, funded: w.funded || false }));
 }
 
 async function create() {
@@ -48,8 +48,8 @@ async function create() {
   const { generatePrivateKey, privateKeyToAccount } = await loadDeps();
   const privateKey = generatePrivateKey();
   const account = privateKeyToAccount(privateKey);
-  saveWallet({ address: account.address, privateKey, network: "base-sepolia", created: new Date().toISOString(), funded: false });
-  console.log(JSON.stringify({ status: "ok", address: account.address, message: "Wallet created and saved." }));
+  saveWallet({ address: account.address, privateKey, created: new Date().toISOString(), funded: false });
+  console.log(JSON.stringify({ status: "ok", address: account.address, message: `Wallet created. Stored locally at ${WALLET_FILE}` }));
 }
 
 async function fund() {

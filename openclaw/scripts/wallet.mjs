@@ -27,7 +27,6 @@ async function status() {
   console.log(JSON.stringify({
     status: "ok",
     address: w.address,
-    network: w.network || "base-sepolia",
     created: w.created,
     funded: w.funded || false,
   }));
@@ -44,7 +43,6 @@ async function create() {
   saveWallet({
     address: account.address,
     privateKey,
-    network: "base-sepolia",
     created: new Date().toISOString(),
     funded: false,
   });

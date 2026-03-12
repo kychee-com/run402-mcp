@@ -55,7 +55,6 @@ export async function handleWalletCreate(
   const wallet = {
     address,
     privateKey,
-    network: "base-sepolia",
     created: new Date().toISOString(),
     funded: false,
   };
@@ -71,10 +70,9 @@ export async function handleWalletCreate(
     `| Field | Value |`,
     `|-------|-------|`,
     `| address | \`${address}\` |`,
-    `| network | base-sepolia |`,
     `| saved to | \`${walletPath}\` |`,
     ``,
-    `Use \`request_faucet\` to fund it with testnet USDC.`,
+    `Use \`request_faucet\` to fund it with testnet USDC, or send USDC on any supported chain.`,
   ];
 
   return { content: [{ type: "text", text: lines.join("\n") }] };
