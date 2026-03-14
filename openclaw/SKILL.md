@@ -503,9 +503,6 @@ node <skill_dir>/scripts/projects.mjs usage <project_id>
 # Inspect schema (tables, columns, RLS)
 node <skill_dir>/scripts/projects.mjs schema <project_id>
 
-# Renew lease (x402 payment)
-node <skill_dir>/scripts/projects.mjs renew <project_id>
-
 # Delete (archive and delete)
 node <skill_dir>/scripts/projects.mjs delete <project_id>
 
@@ -521,7 +518,7 @@ node <skill_dir>/scripts/projects.mjs rest <project_id> todos "done=eq.false&ord
 - **Expired (day 0)**: read-only for 7 days
 - **Grace ends (day 7)**: archived (no access)
 - **Day 37**: permanent deletion
-- **Renew anytime** before deletion via `POST /projects/v1/:id/renew`
+- **Renew anytime** before deletion via `POST /tiers/v1/:tier`
 
 ---
 
@@ -559,7 +556,7 @@ curl -X POST https://api.run402.com/projects/v1 \
   -H "X-402-Payment: <payment>"
 ```
 
-Supported on: `/projects/v1`, `/projects/v1/create/:tier`, `/projects/v1/:id/renew`, `/deployments/v1`, `/message/v1`, `/generate-image/v1`, `/deploy/v1/:tier`.
+Supported on: `/projects/v1`, `/projects/v1/create/:tier`, `/tiers/v1/:tier`, `/deployments/v1`, `/message/v1`, `/generate-image/v1`, `/deploy/v1/:tier`.
 
 **Always include an Idempotency-Key when provisioning or renewing.**
 
@@ -596,7 +593,7 @@ Check pricing: `POST /projects/v1/quote` (free, no auth).
 
 | Auth Method | Header | Used For |
 |-------------|--------|----------|
-| x402 payment | (automatic via x402 client) | `POST /projects/v1`, `/deployments/v1`, `/generate-image/v1`, `/message/v1`, `/projects/v1/:id/renew`, `/deploy/v1/:tier` |
+| x402 payment | (automatic via x402 client) | `POST /projects/v1`, `/deployments/v1`, `/generate-image/v1`, `/message/v1`, `/tiers/v1/:tier`, `/deploy/v1/:tier` |
 | service_key | `Authorization: Bearer {service_key}` | `/projects/v1/admin/:id/*`, `POST /subdomains/v1`, `DELETE /subdomains/v1/:name` |
 | apikey | `apikey: {anon_key or service_key or access_token}` | `/rest/v1/*`, `/auth/v1/*`, `/storage/v1/*` |
 

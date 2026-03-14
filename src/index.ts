@@ -7,7 +7,7 @@ import { provisionSchema, handleProvision } from "./tools/provision.js";
 import { runSqlSchema, handleRunSql } from "./tools/run-sql.js";
 import { restQuerySchema, handleRestQuery } from "./tools/rest-query.js";
 import { uploadFileSchema, handleUploadFile } from "./tools/upload-file.js";
-import { renewSchema, handleRenew } from "./tools/renew.js";
+import { setTierSchema, handleSetTier } from "./tools/set-tier.js";
 import { deploySiteSchema, handleDeploySite } from "./tools/deploy-site.js";
 import { claimSubdomainSchema, handleClaimSubdomain } from "./tools/subdomain.js";
 import { deleteSubdomainSchema, handleDeleteSubdomain } from "./tools/subdomain.js";
@@ -289,10 +289,10 @@ server.tool(
 );
 
 server.tool(
-  "renew_project",
-  "Renew a project's lease. Returns success or payment details if x402 payment is needed.",
-  renewSchema,
-  async (args) => handleRenew(args),
+  "set_tier",
+  "Subscribe, renew, or upgrade a wallet's tier. Auto-detects action based on wallet state. Returns success or payment details if x402 payment is needed.",
+  setTierSchema,
+  async (args) => handleSetTier(args),
 );
 
 server.tool(

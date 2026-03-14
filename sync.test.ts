@@ -37,7 +37,7 @@ function parseSubcommands(filePath: string): string[] {
   const src = readFileSync(filePath, "utf-8");
   const cmds: string[] = [];
   // Pattern 1: switch/case
-  const caseRe = /case\s+"(\w+)":/g;
+  const caseRe = /case\s+"([\w-]+)":/g;
   let m;
   while ((m = caseRe.exec(src))) cmds.push(m[1]);
   // Pattern 2: if (sub !== "word") — the word is the only valid subcommand
@@ -50,7 +50,7 @@ function parseSubcommands(filePath: string): string[] {
 /** Parse CLI commands as "module:subcommand" pairs */
 function parseCliCommands(): string[] {
   const cmds: string[] = [];
-  for (const mod of ["wallet", "projects", "image", "storage", "functions", "secrets", "sites", "subdomains", "apps", "message", "agent"]) {
+  for (const mod of ["wallet", "tier", "projects", "image", "storage", "functions", "secrets", "sites", "subdomains", "apps", "message", "agent"]) {
     for (const sub of parseSubcommands(join(__dirname, "cli/lib", `${mod}.mjs`))) {
       cmds.push(`${mod}:${sub}`);
     }
@@ -62,7 +62,7 @@ function parseCliCommands(): string[] {
 /** Parse OpenClaw commands as "module:subcommand" pairs */
 function parseOpenClawCommands(): string[] {
   const cmds: string[] = [];
-  for (const mod of ["wallet", "projects", "image", "storage", "functions", "secrets", "sites", "subdomains", "apps", "message", "agent"]) {
+  for (const mod of ["wallet", "tier", "projects", "image", "storage", "functions", "secrets", "sites", "subdomains", "apps", "message", "agent"]) {
     for (const sub of parseSubcommands(join(__dirname, "openclaw/scripts", `${mod}.mjs`))) {
       cmds.push(`${mod}:${sub}`);
     }
@@ -125,7 +125,7 @@ const SURFACE: Capability[] = [
   // ── Project lifecycle ────────────────────────────────────────────────────
   { id: "get_quote",         endpoint: "POST /projects/v1/quote",                mcp: "get_quote",                    cli: "projects:quote",      openclaw: "projects:quote" },
   { id: "provision",         endpoint: "POST /projects/v1",                      mcp: "provision_postgres_project",    cli: "projects:provision",  openclaw: "projects:provision" },
-  { id: "renew",             endpoint: "POST /tiers/v1/renew/:tier",             mcp: "renew_project",                 cli: "projects:renew",      openclaw: "projects:renew" },
+  { id: "set_tier",           endpoint: "POST /tiers/v1/:tier",                   mcp: "set_tier",                      cli: "tier:set",            openclaw: "tier:set" },
   { id: "archive",           endpoint: "DELETE /projects/v1/:id",                mcp: "archive_project",               cli: "projects:delete",     openclaw: "projects:delete" },
 
   // ── Faucet ───────────────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ const SURFACE: Capability[] = [
   { id: "get_app",           endpoint: "GET /apps/v1/:version_id",          mcp: "get_app",             cli: "apps:inspect",     openclaw: "apps:inspect" },
 
   // ── Tier management ────────────────────────────────────────────────────
-  { id: "tier_status",       endpoint: "GET /tiers/v1/status",             mcp: "tier_status",      cli: "wallet:tier",      openclaw: "wallet:tier" },
+  { id: "tier_status",       endpoint: "GET /tiers/v1/status",             mcp: "tier_status",      cli: "tier:status",      openclaw: "tier:status" },
 
   // ── Wallet management ──────────────────────────────────────────────────
   { id: "wallet_status",     endpoint: "(local)",                          mcp: "wallet_status",    cli: "wallet:status",    openclaw: "wallet:status" },
@@ -382,10 +382,8 @@ describe("llms.txt alignment", { skip: !llmsTxtAvailable && "~/dev/run402/site/l
 
     // Informational GET endpoints and auth/REST proxied endpoints that don't need dedicated tools
     const IGNORED_ENDPOINTS = new Set([
-      // Tier management (handled internally by provision/renew/bundle/fork)
+      // Tier management
       "GET /tiers/v1",
-      "POST /tiers/v1/subscribe/:tier",
-      "POST /tiers/v1/upgrade/:tier",
       // Info/discovery endpoints (return pricing or schema, no action)
       "GET /projects/v1",
       "GET /deployments/v1",

@@ -64,7 +64,7 @@ export function formatApiError(
       break;
     case 403:
       lines.push(
-        `\nNext step: The project lease may have expired. Use \`get_usage\` to check status, or \`renew_project\` to extend the lease.`,
+        `\nNext step: The project lease may have expired. Use \`get_usage\` to check status, or \`set_tier\` to renew the lease.`,
       );
       break;
     case 404:

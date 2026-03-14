@@ -137,26 +137,6 @@ async function schema(projectId) {
   console.log(JSON.stringify(data, null, 2));
 }
 
-async function renew(projectId) {
-  const p = findProject(projectId);
-  const tier = p.tier || "prototype";
-  const fetchPaid = await setupPaidFetch();
-  const res = await fetchPaid(`${API}/tiers/v1/renew/${tier}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-  const data = await res.json();
-  if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...data })); process.exit(1); }
-
-  const projects = loadProjects();
-  const idx = projects.findIndex(pr => pr.project_id === projectId);
-  if (idx >= 0 && data.lease_expires_at) {
-    projects[idx].lease_expires_at = data.lease_expires_at;
-    saveProjects(projects);
-  }
-  console.log(JSON.stringify(data, null, 2));
-}
-
 async function deleteProject(projectId) {
   const p = findProject(projectId);
   const res = await fetch(`${API}/projects/v1/${projectId}`, {
@@ -183,9 +163,8 @@ switch (cmd) {
   case "usage": await usage(args[0]); break;
   case "schema": await schema(args[0]); break;
   case "rls": await rls(args[0], args[1], args[2]); break;
-  case "renew": await renew(args[0]); break;
   case "delete": await deleteProject(args[0]); break;
   default:
-    console.log("Usage: node projects.mjs <quote|provision|list|sql|rest|usage|schema|rls|renew|delete> [args...]");
+    console.log("Usage: node projects.mjs <quote|provision|list|sql|rest|usage|schema|rls|delete> [args...]");
     process.exit(1);
 }

@@ -105,21 +105,6 @@ async function balance() {
   }, null, 2));
 }
 
-async function tier() {
-  const w = readWallet();
-  if (!w) { console.log(JSON.stringify({ status: "error", message: "No wallet. Run: node wallet.mjs create" })); process.exit(1); }
-  const { privateKeyToAccount } = await loadDeps();
-  const account = privateKeyToAccount(w.privateKey);
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const signature = await account.signMessage({ message: `run402:${timestamp}` });
-  const res = await fetch(`${API}/tiers/v1/status`, {
-    headers: { "X-Run402-Wallet": account.address, "X-Run402-Signature": signature, "X-Run402-Timestamp": timestamp },
-  });
-  const data = await res.json();
-  if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...data })); process.exit(1); }
-  console.log(JSON.stringify(data, null, 2));
-}
-
 async function exportAddr() {
   const w = readWallet();
   if (!w) { console.log(JSON.stringify({ status: "error", message: "No wallet." })); process.exit(1); }
@@ -163,11 +148,10 @@ switch (cmd) {
   case "create": await create(); break;
   case "fund": await fund(); break;
   case "balance": await balance(); break;
-  case "tier": await tier(); break;
   case "export": await exportAddr(); break;
   case "checkout": await checkout(args); break;
   case "history": await history(args); break;
   default:
-    console.log("Usage: node wallet.mjs <status|create|fund|balance|tier|export|checkout|history>");
+    console.log("Usage: node wallet.mjs <status|create|fund|balance|export|checkout|history>");
     process.exit(1);
 }

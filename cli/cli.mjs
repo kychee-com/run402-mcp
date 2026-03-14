@@ -14,7 +14,8 @@ Usage:
 
 Commands:
   wallet      Manage your x402 wallet (create, fund, balance, status)
-  projects    Manage projects (provision, list, query, inspect, renew, delete)
+  tier        Manage tier subscription (status, set)
+  projects    Manage projects (provision, list, query, inspect, delete)
   deploy      Deploy a full-stack app or static site (Postgres + hosting)
   functions   Manage serverless functions (deploy, invoke, logs, list, delete)
   secrets     Manage project secrets (set, list, delete)
@@ -52,6 +53,11 @@ if (!cmd || cmd === '--help' || cmd === '-h') {
 switch (cmd) {
   case "wallet": {
     const { run } = await import("./lib/wallet.mjs");
+    await run(sub, rest);
+    break;
+  }
+  case "tier": {
+    const { run } = await import("./lib/tier.mjs");
     await run(sub, rest);
     break;
   }

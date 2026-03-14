@@ -15,7 +15,6 @@ Subcommands:
   usage <id>                              Show compute/storage usage for a project
   schema <id>                             Inspect the database schema
   rls   <id> <template> <tables_json>     Apply Row-Level Security policies
-  renew <id>                              Extend the project lease (pays via x402)
   delete <id>                             Delete a project and remove it from local state
 
 Examples:
@@ -28,13 +27,12 @@ Examples:
   run402 projects usage abc123
   run402 projects schema abc123
   run402 projects rls abc123 public_read '[{"table":"posts"}]'
-  run402 projects renew abc123
   run402 projects delete abc123
 
 Notes:
   - <id> is the project_id shown in 'run402 projects list'
   - 'rest' uses PostgREST query syntax (table name + optional query string)
-  - 'renew' and 'provision' require a funded wallet — payment is automatic via x402
+  - 'provision' requires a funded wallet — payment is automatic via x402
   - RLS templates: user_owns_rows, public_read, public_read_write
 `;
 
@@ -142,19 +140,6 @@ async function schema(projectId) {
   console.log(JSON.stringify(data, null, 2));
 }
 
-async function renew(projectId) {
-  const p = findProject(projectId);
-  const tier = p.tier || "prototype";
-  const fetchPaid = await setupPaidFetch();
-  const res = await fetchPaid(`${API}/tiers/v1/renew/${tier}`, { method: "POST", headers: { "Content-Type": "application/json" } });
-  const data = await res.json();
-  if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...data })); process.exit(1); }
-  const projects = loadProjects();
-  const idx = projects.findIndex(pr => pr.project_id === projectId);
-  if (idx >= 0 && data.lease_expires_at) { projects[idx].lease_expires_at = data.lease_expires_at; saveProjects(projects); }
-  console.log(JSON.stringify(data, null, 2));
-}
-
 async function deleteProject(projectId) {
   const p = findProject(projectId);
   const res = await fetch(`${API}/projects/v1/${projectId}`, { method: "DELETE", headers: { "Authorization": `Bearer ${p.service_key}` } });
@@ -181,7 +166,6 @@ export async function run(sub, args) {
     case "usage":     await usage(args[0]); break;
     case "schema":    await schema(args[0]); break;
     case "rls":       await rls(args[0], args[1], args[2]); break;
-    case "renew":     await renew(args[0]); break;
     case "delete":    await deleteProject(args[0]); break;
     default:
       console.error(`Unknown subcommand: ${sub}\n`);

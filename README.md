@@ -60,7 +60,7 @@ npx run402-mcp
 | `publish_app` | Publish a project as a forkable app. |
 | `list_versions` | List published versions of a project. |
 | `get_quote` | Get tier pricing. Free, no auth required. |
-| `renew_project` | Renew lease. Handles x402 payment. |
+| `set_tier` | Subscribe, renew, or upgrade wallet tier. Auto-detects action. Handles x402 payment. |
 | `archive_project` | Archive a project and remove from local key store. |
 | `check_balance` | Check billing account balance for a wallet address. |
 | `list_projects` | List all active projects for a wallet address. |
@@ -155,7 +155,7 @@ claude mcp add run402 -- npx -y run402-mcp
 1. **Provision** — Call `provision_postgres_project` to create a database. The server handles x402 payment negotiation and stores credentials locally.
 2. **Build** — Use `run_sql` to create tables, `rest_query` to insert/query data, and `upload_file` for storage.
 3. **Deploy** — Use `deploy_site` for static sites, `deploy_function` for serverless functions, or `bundle_deploy` for a full-stack app in one call.
-4. **Renew** — Call `renew_project` before your lease expires.
+4. **Renew** — Call `set_tier` before your lease expires.
 
 ### Payment Flow
 
