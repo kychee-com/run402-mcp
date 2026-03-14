@@ -1,0 +1,65 @@
+import { describe, it, beforeEach, afterEach } from "node:test";
+import assert from "node:assert/strict";
+import { handleTierStatus } from "./tier-status.js";
+
+const originalFetch = globalThis.fetch;
+
+beforeEach(() => {
+  process.env.RUN402_API_BASE = "https://test-api.run402.com";
+});
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+  delete process.env.RUN402_API_BASE;
+});
+
+describe("tier_status tool", () => {
+  it("returns tier info for subscribed wallet", async () => {
+    globalThis.fetch = (async () =>
+      new Response(
+        JSON.stringify({
+          wallet: "0xabc",
+          tier: "prototype",
+          lease_expires_at: "2026-03-21T00:00:00.000Z",
+          status: "active",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      )) as typeof fetch;
+
+    const result = await handleTierStatus({} as Record<string, never>);
+    const text = result.content[0]!.text;
+    assert.ok(text.includes("prototype"));
+    assert.ok(text.includes("active"));
+    assert.ok(text.includes("2026-03-21"));
+    assert.equal(result.isError, undefined);
+  });
+
+  it("returns guidance when no tier subscription", async () => {
+    globalThis.fetch = (async () =>
+      new Response(
+        JSON.stringify({
+          wallet: "0xabc",
+          tier: null,
+          lease_expires_at: null,
+          status: "none",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      )) as typeof fetch;
+
+    const result = await handleTierStatus({} as Record<string, never>);
+    const text = result.content[0]!.text;
+    assert.ok(text.includes("No active tier"));
+    assert.equal(result.isError, undefined);
+  });
+
+  it("returns isError on API failure", async () => {
+    globalThis.fetch = (async () =>
+      new Response(
+        JSON.stringify({ error: "unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      )) as typeof fetch;
+
+    const result = await handleTierStatus({} as Record<string, never>);
+    assert.equal(result.isError, true);
+  });
+});

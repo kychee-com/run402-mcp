@@ -64,6 +64,7 @@ import { getDeploymentSchema, handleGetDeployment } from "./tools/get-deployment
 import { updateVersionSchema, handleUpdateVersion } from "./tools/update-version.js";
 import { deleteVersionSchema, handleDeleteVersion } from "./tools/delete-version.js";
 import { getAppSchema, handleGetApp } from "./tools/get-app.js";
+import { tierStatusSchema, handleTierStatus } from "./tools/tier-status.js";
 
 const server = new McpServer({
   name: "run402",
@@ -278,6 +279,13 @@ server.tool(
   "Get tier pricing for Run402 projects. Free, no auth required. Shows prices, lease durations, storage limits, and API call limits.",
   getQuoteSchema,
   async (args) => handleGetQuote(args),
+);
+
+server.tool(
+  "tier_status",
+  "Check wallet's current tier subscription — tier name, status, and expiry. Requires wallet auth.",
+  tierStatusSchema,
+  async (args) => handleTierStatus(args),
 );
 
 server.tool(

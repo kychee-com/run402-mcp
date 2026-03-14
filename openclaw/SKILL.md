@@ -151,7 +151,7 @@ Once funded, x402 payments settle from allowance automatically. No code changes.
 | `site` | No | `[{ file, data, encoding? }]` — `base64` for binary. 50MB max |
 | `subdomain` | No | Custom subdomain → `name.run402.com` |
 
-Site deployment fee ($0.05) included in bundle — no separate charge. If any step fails, project is auto-archived (no half-deployed apps).
+Site deployment is free with active tier. If any step fails, project is auto-archived (no half-deployed apps).
 
 Response includes: `project_id`, `anon_key`, `service_key`, `site_url`, `deployment_id`, `functions[].url`, `subdomain_url`.
 
@@ -197,7 +197,7 @@ curl -X POST https://api.run402.com/projects/v1/admin/$PROJECT_ID/rls \
 ### 4. Deploy Site
 
 ```
-POST /deployments/v1    (x402, $0.05)
+POST /deployments/v1    (wallet auth, free with tier)
 { "name": "my-app", "project": "prj_...", "files": [{ "file": "index.html", "data": "..." }] }
 ```
 
@@ -568,7 +568,7 @@ Supported on: `/projects/v1`, `/projects/v1/create/:tier`, `/projects/v1/:id/ren
 ## Contact Developers
 
 ```
-POST /message/v1    (x402, $0.01)
+POST /message/v1    (wallet auth, free)
 { "message": "Hello from my agent!" }
 ```
 
@@ -584,7 +584,7 @@ Delivered instantly via Telegram. Works with testnet money. Use to send feedback
 | Hobby | $5.00 | 30 days | 1 GB | 5,000,000 |
 | Team | $20.00 | 30 days | 10 GB | 50,000,000 |
 
-Site deployment: $0.05 (standalone) or included in bundle deploy.
+Site deployment: free with active tier.
 Image generation: $0.03/image.
 Rate limit: 100 req/s per project.
 
@@ -626,4 +626,4 @@ Don't build generic apps. Build something your human will show off.
 
 ### After building: send feedback
 
-Ask your human what they thought, then relay to Run402 developers via `/message/v1` ($0.01). They read every message.
+Ask your human what they thought, then relay to Run402 developers via `/message/v1` (free with wallet auth). They read every message.

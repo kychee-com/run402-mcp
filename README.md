@@ -50,7 +50,7 @@ npx run402-mcp
 | `set_secret` | Set a project secret. Injected as process.env in functions. |
 | `list_secrets` | List secret keys for a project (values not shown). |
 | `delete_secret` | Delete a secret from a project. |
-| `deploy_site` | Deploy static site. $0.05/deployment. Returns live URL. |
+| `deploy_site` | Deploy static site. Free with active tier. Returns live URL. |
 | `claim_subdomain` | Claim custom subdomain (e.g. myapp.run402.com). Free. |
 | `delete_subdomain` | Release a subdomain. |
 | `list_subdomains` | List all subdomains claimed by a project. |

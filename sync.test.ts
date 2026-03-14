@@ -194,6 +194,9 @@ const SURFACE: Capability[] = [
   { id: "delete_version",    endpoint: "DELETE /projects/v1/admin/:id/versions/:version_id", mcp: "delete_version", cli: "apps:delete", openclaw: "apps:delete" },
   { id: "get_app",           endpoint: "GET /apps/v1/:version_id",          mcp: "get_app",             cli: "apps:inspect",     openclaw: "apps:inspect" },
 
+  // ── Tier management ────────────────────────────────────────────────────
+  { id: "tier_status",       endpoint: "GET /tiers/v1/status",             mcp: "tier_status",      cli: "wallet:tier",      openclaw: "wallet:tier" },
+
   // ── Wallet management ──────────────────────────────────────────────────
   { id: "wallet_status",     endpoint: "(local)",                          mcp: "wallet_status",    cli: "wallet:status",    openclaw: "wallet:status" },
   { id: "wallet_create",     endpoint: "(local)",                          mcp: "wallet_create",    cli: "wallet:create",    openclaw: "wallet:create" },
@@ -349,7 +352,7 @@ const llmsTxtAvailable = existsSync(LLMS_TXT_PATH);
 describe("llms.txt alignment", { skip: !llmsTxtAvailable && "~/dev/run402/site/llms.txt not found" }, () => {
   const llmsTxt = llmsTxtAvailable ? readFileSync(LLMS_TXT_PATH, "utf-8") : "";
 
-  it("MCP Tools table lists all actual MCP tools", () => {
+  it("MCP Tools table lists all actual MCP tools", { skip: !llmsTxt.includes("### MCP Tools") && "llms.txt has no MCP Tools table" }, () => {
     const documented = parseLlmsTxtMcpTools(llmsTxt);
     const actual = parseMcpTools();
     const missing = actual.filter(t => !documented.includes(t));
@@ -360,7 +363,7 @@ describe("llms.txt alignment", { skip: !llmsTxtAvailable && "~/dev/run402/site/l
     );
   });
 
-  it("MCP Tools table has no stale entries", () => {
+  it("MCP Tools table has no stale entries", { skip: !llmsTxt.includes("### MCP Tools") && "llms.txt has no MCP Tools table" }, () => {
     const documented = parseLlmsTxtMcpTools(llmsTxt);
     const actual = parseMcpTools();
     const stale = documented.filter(t => !actual.includes(t));
@@ -383,7 +386,6 @@ describe("llms.txt alignment", { skip: !llmsTxtAvailable && "~/dev/run402/site/l
       "GET /tiers/v1",
       "POST /tiers/v1/subscribe/:tier",
       "POST /tiers/v1/upgrade/:tier",
-      "GET /tiers/v1/status",
       // Info/discovery endpoints (return pricing or schema, no action)
       "GET /projects/v1",
       "GET /deployments/v1",

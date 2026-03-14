@@ -10,6 +10,7 @@ Subcommands:
   create    Generate a new wallet and save it locally
   fund      Request test USDC from the Run402 faucet (Base Sepolia)
   balance   Show on-chain USDC (mainnet + testnet) and Run402 billing balance
+  tier      Show current tier subscription (tier, status, expiry)
   export    Print the wallet address (useful for scripting)
   checkout  Create a billing checkout session (--amount <usd_micros>)
   history   View billing transaction history (--limit <n>)
@@ -126,6 +127,21 @@ async function balance() {
   }, null, 2));
 }
 
+async function tier() {
+  const w = readWallet();
+  if (!w) { console.log(JSON.stringify({ status: "error", message: "No wallet. Run: run402 wallet create" })); process.exit(1); }
+  const { privateKeyToAccount } = await loadDeps();
+  const account = privateKeyToAccount(w.privateKey);
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const signature = await account.signMessage({ message: `run402:${timestamp}` });
+  const res = await fetch(`${API}/tiers/v1/status`, {
+    headers: { "X-Run402-Wallet": account.address, "X-Run402-Signature": signature, "X-Run402-Timestamp": timestamp },
+  });
+  const data = await res.json();
+  if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...data })); process.exit(1); }
+  console.log(JSON.stringify(data, null, 2));
+}
+
 async function exportAddr() {
   const w = readWallet();
   if (!w) { console.log(JSON.stringify({ status: "error", message: "No wallet." })); process.exit(1); }
@@ -173,6 +189,7 @@ export async function run(sub, args) {
     case "create":  await create(); break;
     case "fund":    await fund(); break;
     case "balance": await balance(); break;
+    case "tier":    await tier(); break;
     case "export":   await exportAddr(); break;
     case "checkout": await checkout(args); break;
     case "history":  await history(args); break;
