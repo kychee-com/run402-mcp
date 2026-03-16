@@ -425,6 +425,10 @@ describe("llms.txt alignment", { skip: !llmsTxtAvailable && "~/dev/run402/site/l
       "GET /functions/v1/:name",
       "PATCH /functions/v1/:name",
       "DELETE /functions/v1/:name",
+      // Auth endpoints (called directly from frontend JS, no CLI/MCP wrapper)
+      "GET /auth/v1/providers",
+      "POST /auth/v1/oauth/google/start",
+      "POST /auth/v1/token?grant_type=authorization_code",
       // Utility endpoints
       "GET /.well-known/x402",
       "GET /health",
