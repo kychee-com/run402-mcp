@@ -108,7 +108,7 @@ run402 image --help
 
 - Agent allowance stored at `~/.run402/allowance.json`
 - Project credentials stored at `~/.run402/projects.json`
-- Network: Base Sepolia (testnet) — USDC for x402 payments
+- Network: Base Sepolia (testnet) for prototype tier (free). Base mainnet or Stripe for paid tiers (hobby/team).
 - Payments are handled automatically — no manual signing required
 
 ## License

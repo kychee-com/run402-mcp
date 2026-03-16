@@ -159,7 +159,7 @@ claude mcp add run402 -- npx -y run402-mcp
 
 ### Payment Flow
 
-Provisioning, renewing, site deployment, bundle deploy, and image generation require x402 micropayments. When payment is needed, tools return payment details (not errors) so the LLM can reason about them and guide the user through payment.
+The prototype tier is free — it uses testnet USDC to test the x402 payment flow end-to-end (no real money). Hobby and team tiers, renewals, and image generation require real x402 micropayments (USDC on Base or Stripe credits). When payment is needed, tools return payment details (not errors) so the LLM can reason about them and guide the user through payment.
 
 ### Key Storage
 

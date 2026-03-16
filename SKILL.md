@@ -1,6 +1,6 @@
 ---
 name: run402
-description: Provision and manage AI-native Postgres databases with REST API, auth, storage, and row-level security. Pay with x402 USDC micropayments on Base.
+description: Provision and manage AI-native Postgres databases with REST API, auth, storage, and row-level security. Prototype tier is free (testnet). Paid tiers use x402 USDC on Base or Stripe credits.
 metadata:
   openclaw:
     emoji: "🐘"
@@ -17,7 +17,7 @@ metadata:
 
 # Run402 — Postgres for AI Agents
 
-Run402 gives you a full Postgres database with a REST API, user auth, file storage, and row-level security. You pay with a single x402 micropayment on Base — no signups, no dashboards, no human approval needed.
+Run402 gives you a full Postgres database with a REST API, user auth, file storage, and row-level security. The prototype tier is free — you pay with testnet USDC to test the x402 flow end-to-end, no real money needed. Higher tiers (hobby, team) cost real money, payable with USDC on Base or Stripe credits. No signups, no dashboards, no human approval needed.
 
 One tool call. One payment. You get back `anon_key`, `service_key`, and a project ID. Start creating tables immediately.
 
@@ -30,7 +30,7 @@ You have 10 tools available through the `run402-mcp` server.
 Provision a new Postgres database. Handles x402 payment negotiation. Saves credentials locally.
 
 **Parameters:**
-- `tier` (optional, default: `"prototype"`) — `"prototype"` ($0.10, 7 days), `"hobby"` ($5, 30 days), or `"team"` ($20, 30 days)
+- `tier` (optional, default: `"prototype"`) — `"prototype"` (free/testnet, 7 days), `"hobby"` ($5, 30 days), or `"team"` ($20, 30 days)
 - `name` (optional) — Human-readable project name. Auto-generated if omitted.
 
 **Returns on success:**
@@ -315,7 +315,7 @@ Run402 uses the x402 HTTP payment protocol. Here's what you need to know:
 **What a 402 response looks like:** When payment is required, the tool returns payment details as informational text (not an error). The response includes the price, network (Base L2), and payment address.
 
 **How to handle it:**
-1. Explain to the user what the cost is (e.g., "$0.10 for a 7-day prototype database")
+1. Explain to the user what the cost is (e.g., "a free 7-day prototype database on testnet" or "$5 for a 30-day hobby database")
 2. If the user has an allowance set up, help them complete the payment
 3. If not, guide them through allowance setup (see Agent Allowance Setup below)
 4. Once payment is complete, retry the same tool call
@@ -323,9 +323,11 @@ Run402 uses the x402 HTTP payment protocol. Here's what you need to know:
 **Pricing tiers:**
 | Tier | Price | Lease | Storage | API Calls | Functions | Timeout | Memory | Secrets |
 |------|-------|-------|---------|-----------|-----------|---------|--------|---------|
-| Prototype | $0.10 | 7 days | 250 MB | 500,000 | 5 | 10s | 128MB | 10 |
+| Prototype | Free (testnet) | 7 days | 250 MB | 500,000 | 5 | 10s | 128MB | 10 |
 | Hobby | $5.00 | 30 days | 1 GB | 5,000,000 | 25 | 30s | 256MB | 50 |
 | Team | $20.00 | 30 days | 10 GB | 50,000,000 | 100 | 60s | 512MB | 200 |
+
+Prototype uses Base Sepolia testnet USDC — no real money needed. Get test USDC from the faucet. Hobby and Team require real payment via USDC on Base or Stripe credits.
 
 **Budget enforcement:** When a project hits its tier's API call or storage limit, REST/SQL calls return 402 with usage details and a renew URL. Suggest renewing the project at the same or higher tier.
 
@@ -341,9 +343,9 @@ Run402 uses the x402 HTTP payment protocol. Here's what you need to know:
 - Use `access_token` (from auth login, via HTTP) for: user-scoped CRUD subject to RLS
 
 **Tier selection:**
-- **Prototype** ($0.10): Testing, demos, disposable data. Start here.
-- **Hobby** ($5): Real applications, persistent data, moderate traffic.
-- **Team** ($20): Multi-user apps, heavy traffic, large storage needs.
+- **Prototype** (free, testnet): Testing, demos, disposable data. Start here. Uses testnet USDC — no real money.
+- **Hobby** ($5): Real applications, persistent data, moderate traffic. Requires real payment.
+- **Team** ($20): Multi-user apps, heavy traffic, large storage needs. Requires real payment.
 
 **Lease lifecycle:**
 - Active: full read/write access
@@ -368,14 +370,13 @@ To pay Run402, the user needs an agent allowance with USDC on Base. If they don'
 
 **Option C: x402 OpenClaw Skill** — Install the x402 skill from ClawHub for x402 payment capabilities.
 
-**Funding the allowance:** Once the user has an allowance address, they need USDC on Base. The simplest path: download Coinbase Wallet, buy USDC, send to the allowance address. Base transactions cost under $0.01.
+**Prototype (free):** Use Base Sepolia testnet. Get free test USDC from the faucet (`request_faucet`) or Circle. No real money needed — the goal is to test the x402 payment flow end-to-end.
 
-**Testnet:** For testing without real money, use Base Sepolia testnet. Get test USDC from Circle's faucet. The Run402 API supports testnet at the same endpoints.
+**Hobby/Team (real money):** Fund the allowance with USDC on Base mainnet, or buy credits via Stripe. The simplest path: download Coinbase Wallet, buy USDC, send to the allowance address. Base transactions cost under $0.01.
 
-**Requesting an allowance:** If the user's human controls the allowance funding, suggest:
-- Trial: $1 in USDC covers 10 prototype databases
-- Monthly: $10/month covers two Hobby projects or 100 prototypes
-- One-off: $10 for a project plus buffer for renewals
+**Requesting funding from the user's human (for paid tiers):**
+- $10 covers two Hobby projects
+- $20 covers one Team project plus buffer for renewals
 
 ## Links
 

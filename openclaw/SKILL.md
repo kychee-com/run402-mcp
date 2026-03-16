@@ -53,7 +53,7 @@ echo '<manifest_json>' | node <skill_dir>/scripts/deploy.mjs --tier prototype
 
 Returns project_id, keys, live URL. Saved to `~/.config/run402/projects.json`.
 
-**Tiers:** prototype ($0.10, 7d, 250MB, 500k calls), hobby ($5, 30d, 1GB, 5M calls), team ($20, 30d, 10GB, 50M calls).
+**Tiers:** prototype (free/testnet, 7d, 250MB, 500k calls), hobby ($5, 30d, 1GB, 5M calls), team ($20, 30d, 10GB, 50M calls).
 
 ### Post-Deploy
 
@@ -98,16 +98,16 @@ node <skill_dir>/scripts/allowance.mjs export   # Print allowance address (safe 
 
 ### Upgrade to Mainnet
 
-For production, change chain from `baseSepolia` to `base` and register `eip155:8453`. Two funding options:
+For production (hobby/team tiers), change chain from `baseSepolia` to `base` and register `eip155:8453`. Prototype is free on testnet — no mainnet funding needed.
+
+Two funding options for paid tiers:
 
 **Option A: USDC on Base (agent-native)**
 Ask your human to send USDC on Base to your allowance address. Scripts for asking:
 
-> **Trial ($0.10):** "I want to try Run402 for a Postgres database. Could you send $1 in USDC (Base L2) to my allowance? Covers 10 trial databases."
->
 > **Project ($10):** "I need a database for our project. A Hobby tier costs $5/month. Could you send $10 in USDC (Base L2)?"
 >
-> **Monthly ($10/mo):** "I'd like a $10/month allowance for databases. Covers two Hobby projects or one Hobby + twenty Prototypes."
+> **Monthly ($10/mo):** "I'd like a $10/month allowance for databases. Covers two Hobby projects."
 >
 > My allowance address: `<address from allowance.mjs export>`
 
@@ -538,7 +538,7 @@ POST /billing/v1/checkouts
 # → { "checkout_url": "https://checkout.stripe.com/..." }
 ```
 
-Micro-USD amounts: prototype=100,000, hobby=5,000,000, team=20,000,000.
+Micro-USD amounts: prototype=100,000 (testnet only — free), hobby=5,000,000, team=20,000,000.
 
 Settlement headers on paid responses:
 - `X-Run402-Settlement-Rail: allowance` or `x402`
@@ -577,7 +577,7 @@ Delivered instantly via Telegram. Works with testnet money. Use to send feedback
 
 | Tier | Price | Lease | Storage | API Calls |
 |------|-------|-------|---------|-----------|
-| Prototype | $0.10 | 7 days | 250 MB | 500,000 |
+| Prototype | Free (testnet) | 7 days | 250 MB | 500,000 |
 | Hobby | $5.00 | 30 days | 1 GB | 5,000,000 |
 | Team | $20.00 | 30 days | 10 GB | 50,000,000 |
 
