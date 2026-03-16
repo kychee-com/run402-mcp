@@ -509,7 +509,7 @@ describe("CLI e2e happy path", () => {
     const { writeFileSync: wf } = await import("node:fs");
     wf(manifestPath, JSON.stringify({
       name: "test-app",
-      site: [{ file: "index.html", data: "<h1>Hello</h1>" }],
+      files: [{ file: "index.html", data: "<h1>Hello</h1>" }],
     }));
     captureStart();
     await run(["--manifest", manifestPath]);

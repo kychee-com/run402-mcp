@@ -15,7 +15,7 @@ Manifest format (JSON):
   {
     "name": "my-app",
     "migrations": "CREATE TABLE items ...",
-    "site": [{ "file": "index.html", "data": "<html>...</html>" }],
+    "files": [{ "file": "index.html", "data": "<html>...</html>" }],
     "subdomain": "my-app"
   }
 

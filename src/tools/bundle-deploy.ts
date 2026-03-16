@@ -41,7 +41,7 @@ export const bundleDeploySchema = {
     )
     .optional()
     .describe("Functions to deploy"),
-  site: z
+  files: z
     .array(
       z.object({
         file: z.string(),
@@ -63,7 +63,7 @@ export async function handleBundleDeploy(args: {
   rls?: { template: string; tables: Array<{ table: string; owner_column?: string }> };
   secrets?: Array<{ key: string; value: string }>;
   functions?: Array<{ name: string; code: string; config?: { timeout?: number; memory?: number } }>;
-  site?: Array<{ file: string; data: string; encoding?: string }>;
+  files?: Array<{ file: string; data: string; encoding?: string }>;
   subdomain?: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
   const auth = requireAllowanceAuth();
@@ -78,7 +78,7 @@ export async function handleBundleDeploy(args: {
       rls: args.rls,
       secrets: args.secrets,
       functions: args.functions,
-      site: args.site,
+      files: args.files,
       subdomain: args.subdomain,
     },
   });
