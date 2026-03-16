@@ -6,8 +6,8 @@ Usage:
   run402 subdomains <subcommand> [args...]
 
 Subcommands:
-  claim  <deployment_id> <name> [--project <id>]   Claim a subdomain for a deployment
-  delete <name> [--project <id>]                    Release a subdomain
+  claim  <deployment_id> <name> --project <id>    Claim a subdomain for a deployment
+  delete <name> --project <id>                     Release a subdomain
   list   <id>                                       List subdomains for a project
 
 Examples:
@@ -26,11 +26,12 @@ async function claim(deploymentId, name, args) {
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--project" && args[i + 1]) opts.project = args[++i];
   }
-  const headers = { "Content-Type": "application/json" };
-  if (opts.project) {
-    const p = findProject(opts.project);
-    headers["Authorization"] = `Bearer ${p.service_key}`;
+  if (!opts.project) {
+    console.error("Error: --project <id> is required for subdomain claim.");
+    process.exit(1);
   }
+  const p = findProject(opts.project);
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${p.service_key}` };
   const res = await fetch(`${API}/subdomains/v1`, {
     method: "POST",
     headers,
@@ -46,11 +47,12 @@ async function deleteSubdomain(name, args) {
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--project" && args[i + 1]) opts.project = args[++i];
   }
-  const headers = {};
-  if (opts.project) {
-    const p = findProject(opts.project);
-    headers["Authorization"] = `Bearer ${p.service_key}`;
+  if (!opts.project) {
+    console.error("Error: --project <id> is required for subdomain delete.");
+    process.exit(1);
   }
+  const p = findProject(opts.project);
+  const headers = { "Authorization": `Bearer ${p.service_key}` };
   const res = await fetch(`${API}/subdomains/v1/${encodeURIComponent(name)}`, {
     method: "DELETE",
     headers,

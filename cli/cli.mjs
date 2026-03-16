@@ -4,9 +4,15 @@
  * https://run402.com
  */
 
+import { readFileSync } from "node:fs";
+
 const [,, cmd, sub, ...rest] = process.argv;
 
-const HELP = `run402 v1.0.0 — Full-stack backend infra for AI agents
+const { version } = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8")
+);
+
+const HELP = `run402 v${version} — Full-stack backend infra for AI agents
 https://run402.com
 
 Usage:
@@ -46,9 +52,14 @@ Getting started:
   run402 deploy --manifest app.json
 `;
 
+if (cmd === '--version' || cmd === '-v') {
+  console.log(version);
+  process.exit(0);
+}
+
 if (!cmd || cmd === '--help' || cmd === '-h') {
   console.log(HELP);
-  process.exit(cmd ? 0 : 0);
+  process.exit(0);
 }
 
 switch (cmd) {
