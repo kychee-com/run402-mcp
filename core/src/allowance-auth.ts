@@ -44,7 +44,7 @@ function personalSign(privateKeyHex: string, address: string, message: string): 
     ? privateKeyHex.slice(2)
     : privateKeyHex;
   const pkBytes = Uint8Array.from(Buffer.from(pkHex, "hex"));
-  const rawSig = secp256k1.sign(hash, pkBytes);
+  const rawSig = secp256k1.sign(hash, pkBytes, { prehash: false });
   const sig = secp256k1.Signature.fromBytes(rawSig);
 
   // Determine recovery bit by trying both and matching the address
