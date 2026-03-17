@@ -31,7 +31,7 @@ export async function handleDeploySite(args: {
   target?: string;
   files: Array<{ file: string; data: string; encoding?: string }>;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
-  const auth = requireAllowanceAuth();
+  const auth = requireAllowanceAuth("/deployments/v1");
   if ("error" in auth) return auth.error;
 
   const res = await apiRequest("/deployments/v1", {

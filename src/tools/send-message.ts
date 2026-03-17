@@ -10,7 +10,7 @@ export const sendMessageSchema = {
 export async function handleSendMessage(args: {
   message: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
-  const auth = requireAllowanceAuth();
+  const auth = requireAllowanceAuth("/message/v1");
   if ("error" in auth) return auth.error;
 
   const res = await apiRequest("/message/v1", {

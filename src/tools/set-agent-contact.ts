@@ -18,7 +18,7 @@ export async function handleSetAgentContact(args: {
   if (args.email) body.email = args.email;
   if (args.webhook) body.webhook = args.webhook;
 
-  const auth = requireAllowanceAuth();
+  const auth = requireAllowanceAuth("/agent/v1/contact");
   if ("error" in auth) return auth.error;
 
   const res = await apiRequest("/agent/v1/contact", {

@@ -19,7 +19,7 @@ export async function handleProvision(args: {
   tier?: string;
   name?: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
-  const auth = requireAllowanceAuth();
+  const auth = requireAllowanceAuth("/projects/v1");
   if ("error" in auth) return auth.error;
 
   const tier = args.tier || "prototype";

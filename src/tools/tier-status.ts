@@ -8,7 +8,7 @@ export const tierStatusSchema = {};
 export async function handleTierStatus(
   _args: Record<string, never>,
 ): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
-  const auth = requireAllowanceAuth();
+  const auth = requireAllowanceAuth("/tiers/v1/status");
   if ("error" in auth) return auth.error;
 
   const res = await apiRequest("/tiers/v1/status", {

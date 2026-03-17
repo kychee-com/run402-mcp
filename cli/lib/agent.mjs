@@ -23,7 +23,7 @@ async function contact(args) {
     if (args[i] === "--webhook" && args[i + 1]) webhook = args[++i];
   }
   if (!name) { console.error(JSON.stringify({ status: "error", message: "Missing --name <name>" })); process.exit(1); }
-  const authHeaders = await allowanceAuthHeaders();
+  const authHeaders = allowanceAuthHeaders("/agent/v1/contact");
 
   const body = { name };
   if (email) body.email = email;

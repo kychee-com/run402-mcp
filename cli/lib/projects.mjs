@@ -53,7 +53,7 @@ async function provision(args) {
     if (args[i] === "--tier" && args[i + 1]) opts.tier = args[++i];
     if (args[i] === "--name" && args[i + 1]) opts.name = args[++i];
   }
-  const authHeaders = await allowanceAuthHeaders();
+  const authHeaders = allowanceAuthHeaders("/projects/v1");
   const body = { tier: opts.tier };
   if (opts.name) body.name = opts.name;
   const res = await fetch(`${API}/projects/v1`, {

@@ -66,7 +66,7 @@ export async function handleBundleDeploy(args: {
   files?: Array<{ file: string; data: string; encoding?: string }>;
   subdomain?: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
-  const auth = requireAllowanceAuth();
+  const auth = requireAllowanceAuth("/deploy/v1");
   if ("error" in auth) return auth.error;
 
   const res = await apiRequest("/deploy/v1", {

@@ -1,4 +1,4 @@
-import { readAllowance, ALLOWANCE_FILE, API } from "./config.mjs";
+import { readAllowance, ALLOWANCE_FILE, API, allowanceAuthHeaders } from "./config.mjs";
 import { setupPaidFetch } from "./paid-fetch.mjs";
 
 const HELP = `run402 tier — Manage your Run402 tier subscription
@@ -25,14 +25,9 @@ Examples:
 `;
 
 async function status() {
-  const w = readAllowance();
-  if (!w) { console.log(JSON.stringify({ status: "error", message: "No agent allowance. Run: run402 allowance create" })); process.exit(1); }
-  const { privateKeyToAccount } = await import("viem/accounts");
-  const account = privateKeyToAccount(w.privateKey);
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const signature = await account.signMessage({ message: `run402:${timestamp}` });
+  const authHeaders = allowanceAuthHeaders("/tiers/v1/status");
   const res = await fetch(`${API}/tiers/v1/status`, {
-    headers: { "X-Run402-Wallet": account.address, "X-Run402-Signature": signature, "X-Run402-Timestamp": timestamp },
+    headers: { ...authHeaders },
   });
   const data = await res.json();
   if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...data })); process.exit(1); }

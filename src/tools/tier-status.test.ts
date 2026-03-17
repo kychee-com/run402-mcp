@@ -3,15 +3,13 @@ import assert from "node:assert/strict";
 
 let allowanceAuthReturn: any = {
   headers: {
-    "X-Run402-Wallet": "0xtest",
-    "X-Run402-Signature": "0xsig",
-    "X-Run402-Timestamp": "1234567890",
+    "SIGN-IN-WITH-X": "dGVzdA==",
   },
 };
 
 mock.module("../allowance-auth.js", {
   namedExports: {
-    requireAllowanceAuth: () => allowanceAuthReturn,
+    requireAllowanceAuth: (_path: string) => allowanceAuthReturn,
   },
 });
 
@@ -23,9 +21,7 @@ beforeEach(() => {
   process.env.RUN402_API_BASE = "https://test-api.run402.com";
   allowanceAuthReturn = {
     headers: {
-      "X-Run402-Wallet": "0xtest",
-      "X-Run402-Signature": "0xsig",
-      "X-Run402-Timestamp": "1234567890",
+      "SIGN-IN-WITH-X": "dGVzdA==",
     },
   };
 });

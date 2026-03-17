@@ -47,7 +47,7 @@ async function fork(versionId, name, args) {
     if (args[i] === "--tier" && args[i + 1]) opts.tier = args[++i];
     if (args[i] === "--subdomain" && args[i + 1]) opts.subdomain = args[++i];
   }
-  const authHeaders = await allowanceAuthHeaders();
+  const authHeaders = allowanceAuthHeaders("/fork/v1");
 
   const body = { version_id: versionId, name };
   if (opts.subdomain) body.subdomain = opts.subdomain;

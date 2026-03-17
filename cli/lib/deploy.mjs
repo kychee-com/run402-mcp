@@ -67,7 +67,7 @@ export async function run(args) {
 
   const manifest = opts.manifest ? JSON.parse(readFileSync(opts.manifest, "utf-8")) : JSON.parse(await readStdin());
 
-  const authHeaders = await allowanceAuthHeaders();
+  const authHeaders = allowanceAuthHeaders("/deploy/v1");
   const res = await fetch(`${API}/deploy/v1`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders }, body: JSON.stringify(manifest) });
   const result = await res.json();
   if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...result })); process.exit(1); }

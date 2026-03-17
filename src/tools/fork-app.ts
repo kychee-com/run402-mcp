@@ -18,7 +18,7 @@ export async function handleForkApp(args: {
   name: string;
   subdomain?: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
-  const auth = requireAllowanceAuth();
+  const auth = requireAllowanceAuth("/fork/v1");
   if ("error" in auth) return auth.error;
 
   const res = await apiRequest("/fork/v1", {

@@ -55,7 +55,7 @@ async function deploy(args) {
   const body = { files: manifest.files, project: projectId };
   if (opts.target) body.target = opts.target;
 
-  const authHeaders = await allowanceAuthHeaders();
+  const authHeaders = allowanceAuthHeaders("/deployments/v1");
   const res = await fetch(`${API}/deployments/v1`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders },

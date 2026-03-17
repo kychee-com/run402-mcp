@@ -2,21 +2,21 @@
  * Allowance auth helper — re-exports core signing + adds MCP-specific error wrapper.
  */
 
-import { getAllowanceAuthHeaders as _getAllowanceAuthHeaders, type AllowanceAuthHeaders } from "../core/dist/allowance-auth.js";
+import { getAllowanceAuthHeaders as _getAllowanceAuthHeaders, type SIWxAuthHeaders } from "../core/dist/allowance-auth.js";
 
-export type { AllowanceAuthHeaders };
+export type { SIWxAuthHeaders };
 
 export const getAllowanceAuthHeaders = _getAllowanceAuthHeaders;
 
 /**
  * Get allowance auth headers or return an MCP error result.
  */
-export function requireAllowanceAuth(): {
-  headers: AllowanceAuthHeaders;
+export function requireAllowanceAuth(path: string): {
+  headers: SIWxAuthHeaders;
 } | {
   error: { content: Array<{ type: "text"; text: string }>; isError: true };
 } {
-  const headers = getAllowanceAuthHeaders();
+  const headers = getAllowanceAuthHeaders(path);
   if (!headers) {
     return {
       error: {

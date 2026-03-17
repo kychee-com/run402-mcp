@@ -1,4 +1,5 @@
 import { readAllowance, saveAllowance, loadKeyStore, CONFIG_DIR, ALLOWANCE_FILE, API } from "./config.mjs";
+import { getAllowanceAuthHeaders } from "../core-dist/allowance-auth.js";
 import { mkdirSync } from "fs";
 
 const USDC_ABI = [{ name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] }];
@@ -74,14 +75,13 @@ export async function run() {
   const store = loadKeyStore();
   let tierInfo = null;
   try {
-    const { privateKeyToAccount } = await import("viem/accounts");
-    const account = privateKeyToAccount(allowance.privateKey);
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const signature = await account.signMessage({ message: `run402:${timestamp}` });
-    const res = await fetch(`${API}/tiers/v1/status`, {
-      headers: { "X-Run402-Wallet": account.address, "X-Run402-Signature": signature, "X-Run402-Timestamp": timestamp },
-    });
-    if (res.ok) tierInfo = await res.json();
+    const authHeaders = getAllowanceAuthHeaders("/tiers/v1/status");
+    if (authHeaders) {
+      const res = await fetch(`${API}/tiers/v1/status`, {
+        headers: { ...authHeaders },
+      });
+      if (res.ok) tierInfo = await res.json();
+    }
   } catch {}
 
   if (tierInfo && tierInfo.tier && tierInfo.status === "active") {

@@ -15,7 +15,7 @@ Examples:
 
 async function send(text) {
   if (!text) { console.error(JSON.stringify({ status: "error", message: "Missing message text" })); process.exit(1); }
-  const authHeaders = await allowanceAuthHeaders();
+  const authHeaders = allowanceAuthHeaders("/message/v1");
 
   const res = await fetch(`${API}/message/v1`, {
     method: "POST",
