@@ -105,8 +105,9 @@ describe("getAllowanceAuthHeaders", () => {
     assert.equal(decoded.address, TEST_ADDRESS);
     assert.equal(decoded.uri, "https://api.run402.com/projects/v1");
     assert.equal(decoded.version, "1");
-    assert.equal(decoded.chainId, 84532);
-    assert.equal(decoded.type, "eip4361");
+    assert.equal(decoded.statement, "Sign in to Run402");
+    assert.equal(decoded.chainId, "eip155:84532");
+    assert.equal(decoded.type, "eip191");
     assert.ok(decoded.nonce);
     assert.ok(decoded.issuedAt);
     assert.ok(decoded.expirationTime);

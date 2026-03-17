@@ -142,10 +142,11 @@ export function getAllowanceAuthHeaders(path: string, allowancePath?: string): S
   const payload = {
     domain,
     address: toChecksumAddress(allowance.address),
+    statement: "Sign in to Run402",
     uri,
     version: "1",
-    chainId: 84532,
-    type: "eip4361",
+    chainId: "eip155:84532",
+    type: "eip191",
     nonce,
     issuedAt,
     expirationTime,
