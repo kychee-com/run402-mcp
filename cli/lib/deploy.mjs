@@ -14,10 +14,29 @@ Options:
 Manifest format (JSON):
   {
     "name": "my-app",
-    "migrations": "CREATE TABLE items ...",
+    "migrations": "CREATE TABLE items (id serial PRIMARY KEY, title text NOT NULL, done boolean DEFAULT false)",
+    "rls": {
+      "template": "public_read_write",
+      "tables": [{ "table": "items" }]
+    },
+    "secrets": [{ "key": "OPENAI_API_KEY", "value": "sk-..." }],
+    "functions": [{
+      "name": "my-fn",
+      "code": "export default async (req) => new Response('ok')"
+    }],
     "files": [{ "file": "index.html", "data": "<html>...</html>" }],
     "subdomain": "my-app"
   }
+
+  All fields except "name" are optional.
+
+  RLS templates:
+    user_owns_rows   — users see only their rows (requires owner_column per table)
+    public_read      — anyone reads, authenticated users write
+    public_read_write — anyone reads and writes
+
+  ⚠️  Without RLS, tables are read-only via anon_key. If your app writes
+  data from the browser, you almost certainly need an rls block.
 
 Examples:
   run402 deploy --manifest app.json
