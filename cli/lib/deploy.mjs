@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { API, allowanceAuthHeaders, findProject } from "./config.mjs";
-import { resolveFilePathsInManifest } from "./manifest.mjs";
+import { resolveFilePathsInManifest, resolveMigrationsFile } from "./manifest.mjs";
 
 const HELP = `run402 deploy — Deploy to an existing project on Run402
 
@@ -17,7 +17,8 @@ Options:
 Manifest format (JSON):
   {
     "project_id": "prj_...",
-    "migrations": "CREATE TABLE items (id serial PRIMARY KEY, title text NOT NULL, done boolean DEFAULT false)",
+    "migrations": "CREATE TABLE items (...)",
+    "migrations_file": "setup.sql",
     "rls": {
       "template": "public_read_write",
       "tables": [{ "table": "items" }]
@@ -36,6 +37,14 @@ Manifest format (JSON):
 
   project_id is required (provision first with 'run402 provision').
   All other fields are optional.
+
+  Migrations can be inline or read from a file:
+    "migrations": "CREATE TABLE ..."              ← inline SQL
+    "migrations_file": "setup.sql"                ← read from disk
+  Use migrations_file when your SQL contains JSONB literals or other
+  characters that are painful to escape inside a JSON string.
+  Paths are resolved relative to the manifest file's directory.
+  If both are present, migrations_file wins.
 
   Files can use either inline "data" or a local "path":
     { "file": "index.html", "data": "<html>...</html>" }   ← inline content
@@ -83,7 +92,11 @@ export async function run(args) {
 
   const raw = opts.manifest ? readFileSync(opts.manifest, "utf-8") : await readStdin();
   const manifest = JSON.parse(raw);
-  if (opts.manifest) resolveFilePathsInManifest(manifest, dirname(resolve(opts.manifest)));
+  if (opts.manifest) {
+    const baseDir = dirname(resolve(opts.manifest));
+    resolveMigrationsFile(manifest, baseDir);
+    resolveFilePathsInManifest(manifest, baseDir);
+  }
 
   // --project flag overrides manifest's project_id
   if (opts.project) manifest.project_id = opts.project;
