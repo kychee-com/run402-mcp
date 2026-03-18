@@ -17,8 +17,8 @@ Subcommands:
   usage <id>                              Show compute/storage usage for a project
   schema <id>                             Inspect the database schema
   rls   <id> <template> <tables_json>     Apply Row-Level Security policies
-  delete <id>                             Delete a project and remove it from local state${process.env.RUN402_ADMIN ? `
-  pin   <id>                              [admin] Pin a project (prevents expiry/GC)` : ""}
+  delete <id>                             Delete a project and remove it from local state
+  pin   <id>                              Pin a project (prevents expiry/GC)
 
 Examples:
   run402 projects quote
@@ -32,6 +32,7 @@ Examples:
   run402 projects usage abc123
   run402 projects schema abc123
   run402 projects rls abc123 public_read '[{"table":"posts"}]'
+  run402 projects keys abc123
   run402 projects delete abc123
 
 Notes:
