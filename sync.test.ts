@@ -66,6 +66,7 @@ function parseCliCommands(): string[] {
   }
   if (existsSync(join(__dirname, "cli/lib/deploy.mjs"))) cmds.push("deploy");
   if (existsSync(join(__dirname, "cli/lib/init.mjs"))) cmds.push("init");
+  if (existsSync(join(__dirname, "cli/lib/status.mjs"))) cmds.push("status");
   return cmds.sort();
 }
 
@@ -79,6 +80,7 @@ function parseOpenClawCommands(): string[] {
   }
   if (existsSync(join(__dirname, "openclaw/scripts/deploy.mjs"))) cmds.push("deploy");
   if (existsSync(join(__dirname, "openclaw/scripts/init.mjs"))) cmds.push("init");
+  if (existsSync(join(__dirname, "openclaw/scripts/status.mjs"))) cmds.push("status");
   return cmds.sort();
 }
 
@@ -133,8 +135,9 @@ interface Capability {
 }
 
 const SURFACE: Capability[] = [
-  // ── Init (local-only) ──────────────────────────────────────────────────
+  // ── Init / status (local-only) ──────────────────────────────────────────
   { id: "init",              endpoint: "(local)",                              mcp: null,                            cli: "init",                openclaw: "init" },
+  { id: "status",            endpoint: "(local)",                              mcp: null,                            cli: "status",              openclaw: "status" },
 
   // ── Project lifecycle ────────────────────────────────────────────────────
   { id: "get_quote",         endpoint: "POST /projects/v1/quote",                mcp: "get_quote",                    cli: "projects:quote",      openclaw: "projects:quote" },

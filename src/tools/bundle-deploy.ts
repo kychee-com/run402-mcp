@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { apiRequest } from "../client.js";
-import { saveProject, setActiveProjectId } from "../keystore.js";
-import { formatApiError } from "../errors.js";
+import { formatApiError, projectNotFound } from "../errors.js";
 import { requireAllowanceAuth } from "../allowance-auth.js";
+import { getProject } from "../keystore.js";
 
 export const bundleDeploySchema = {
-  name: z.string().describe("App name (used as project name and default subdomain)"),
+  project_id: z.string().describe("Project ID to deploy to (from provision). Uses active project if omitted.").optional(),
   migrations: z
     .string()
     .optional()
-    .describe("SQL migrations to run after provisioning (CREATE TABLE statements, etc.)"),
+    .describe("SQL migrations to run (CREATE TABLE statements, etc.)"),
   rls: z
     .object({
       template: z.enum(["user_owns_rows", "public_read", "public_read_write"]),
@@ -58,7 +58,7 @@ export const bundleDeploySchema = {
 };
 
 export async function handleBundleDeploy(args: {
-  name: string;
+  project_id?: string;
   migrations?: string;
   rls?: { template: string; tables: Array<{ table: string; owner_column?: string }> };
   secrets?: Array<{ key: string; value: string }>;
@@ -66,6 +66,11 @@ export async function handleBundleDeploy(args: {
   files?: Array<{ file: string; data: string; encoding?: string }>;
   subdomain?: string;
 }): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
+  const projectId = args.project_id;
+  if (!projectId) return projectNotFound("(none — project_id is required)");
+  const project = getProject(projectId);
+  if (!project) return projectNotFound(projectId);
+
   const auth = requireAllowanceAuth("/deploy/v1");
   if ("error" in auth) return auth.error;
 
@@ -73,7 +78,7 @@ export async function handleBundleDeploy(args: {
     method: "POST",
     headers: { ...auth.headers },
     body: {
-      name: args.name,
+      project_id: projectId,
       migrations: args.migrations,
       rls: args.rls,
       secrets: args.secrets,
@@ -87,28 +92,18 @@ export async function handleBundleDeploy(args: {
 
   const body = res.body as {
     project_id: string;
-    anon_key: string;
-    service_key: string;
-    schema_slot: string;
     site_url?: string;
-    subdomain_url?: string;
+    deployment_id?: string;
     functions?: Array<{ name: string; url: string }>;
+    subdomain_url?: string;
   };
 
-  // Save credentials to local key store and set as active project
-  saveProject(body.project_id, {
-    anon_key: body.anon_key,
-    service_key: body.service_key,
-  });
-  setActiveProjectId(body.project_id);
-
   const lines = [
-    `## Bundle Deployed: ${args.name}`,
+    `## Bundle Deployed`,
     ``,
     `| Field | Value |`,
     `|-------|-------|`,
     `| project_id | \`${body.project_id}\` |`,
-    `| schema | ${body.schema_slot} |`,
   ];
 
   if (body.site_url) {
@@ -116,6 +111,9 @@ export async function handleBundleDeploy(args: {
   }
   if (body.subdomain_url) {
     lines.push(`| subdomain | ${body.subdomain_url} |`);
+  }
+  if (body.deployment_id) {
+    lines.push(`| deployment_id | \`${body.deployment_id}\` |`);
   }
 
   if (body.functions && body.functions.length > 0) {
@@ -125,9 +123,6 @@ export async function handleBundleDeploy(args: {
       lines.push(`- \`${fn.name}\` → ${fn.url}`);
     }
   }
-
-  lines.push(``);
-  lines.push(`Keys saved to local key store.`);
 
   return { content: [{ type: "text", text: lines.join("\n") }] };
 }

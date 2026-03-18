@@ -5,10 +5,27 @@ import { mkdirSync } from "fs";
 const USDC_ABI = [{ name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] }];
 const USDC_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
+const HELP = `run402 init — Set up allowance, funding, and check tier status
+
+Usage:
+  run402 init
+
+Steps (idempotent — safe to re-run):
+  1. Creates config directory (~/.config/run402)
+  2. Creates agent allowance if none exists
+  3. Checks on-chain USDC balance; requests faucet if zero
+  4. Shows current tier subscription status
+  5. Lists local project count
+  6. Suggests next step (tier set or deploy)
+
+Run this once to get started, or again to check your setup.
+`;
+
 function short(addr) { return addr.slice(0, 6) + "..." + addr.slice(-4); }
 function line(label, value) { console.log(`  ${label.padEnd(10)} ${value}`); }
 
-export async function run() {
+export async function run(args = []) {
+  if (args.includes("--help") || args.includes("-h")) { console.log(HELP); process.exit(0); }
   console.log();
 
   // 1. Config directory

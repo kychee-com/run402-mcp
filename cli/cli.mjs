@@ -20,6 +20,7 @@ Usage:
 
 Commands:
   init        Set up allowance, funding, and check tier status
+  status      Show full account state (allowance, balance, tier, projects)
   allowance   Manage your agent allowance (create, fund, balance, status)
   tier        Manage tier subscription (status, set)
   projects    Manage projects (provision, list, query, inspect, delete)
@@ -65,7 +66,12 @@ if (!cmd || cmd === '--help' || cmd === '-h') {
 switch (cmd) {
   case "init": {
     const { run } = await import("./lib/init.mjs");
-    await run();
+    await run([sub, ...rest].filter(Boolean));
+    break;
+  }
+  case "status": {
+    const { run } = await import("./lib/status.mjs");
+    await run([sub, ...rest].filter(Boolean));
     break;
   }
   case "allowance": {

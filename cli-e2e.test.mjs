@@ -123,6 +123,9 @@ function mockFetch(input, init) {
   if (path === "/tiers/v1/status" && method === "GET") {
     return Promise.resolve(json({ tier: "prototype", status: "active", lease_expires_at: "2026-03-22T00:00:00.000Z" }));
   }
+  if (path.match(/^\/wallets\/v1\/[^/]+\/projects$/) && method === "GET") {
+    return Promise.resolve(json({ wallet: "0xtest", projects: [{ id: "prj_test123", name: "test", tier: "prototype", status: "active", lease_expires_at: "2026-03-22T00:00:00.000Z" }] }));
+  }
   // x402 discovery GET before paid POST
   if (path.startsWith("/tiers/v1/") && path !== "/tiers/v1/status" && method === "GET") {
     return Promise.resolve(json({ price: "$0.10", network: "base-sepolia" }));
@@ -217,7 +220,7 @@ function mockFetch(input, init) {
   // Bundle deploy
   if (path === "/deploy/v1" && method === "POST") {
     return Promise.resolve(json({
-      ...TEST_PROJECT,
+      project_id: TEST_PROJECT.project_id,
       site_url: "https://test.sites.run402.com",
       subdomain_url: "https://test-app.run402.com",
     }));
@@ -505,11 +508,10 @@ describe("CLI e2e happy path", () => {
     const manifestPath = join(tempDir, "manifest.json");
     const { writeFileSync: wf } = await import("node:fs");
     wf(manifestPath, JSON.stringify({
-      name: "test-app",
       files: [{ file: "index.html", data: "<h1>Hello</h1>" }],
     }));
     captureStart();
-    await run(["--manifest", manifestPath]);
+    await run(["--manifest", manifestPath, "--project", "prj_test123"]);
     captureStop();
     assert.ok(captured().includes("prj_test123"), "should return project info");
   });
@@ -783,5 +785,17 @@ describe("CLI e2e happy path", () => {
     assert.ok(out.includes("Allowance"), "should show allowance");
     assert.ok(out.includes("Balance") || out.includes("USDC"), "should show balance");
     assert.ok(out.includes("Tier") || out.includes("prototype"), "should show tier");
+  });
+
+  it("status", async () => {
+    const { run } = await import("./cli/lib/status.mjs");
+    captureStart();
+    await run();
+    captureStop();
+    const out = captured();
+    const data = JSON.parse(out);
+    assert.ok(data.allowance, "should include allowance");
+    assert.ok(data.allowance.address, "should include allowance address");
+    assert.ok(Array.isArray(data.projects), "should include projects array");
   });
 });

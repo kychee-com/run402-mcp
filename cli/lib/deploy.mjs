@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
-import { API, allowanceAuthHeaders, saveProject, setActiveProjectId } from "./config.mjs";
+import { API, allowanceAuthHeaders, findProject } from "./config.mjs";
 
-const HELP = `run402 deploy — Deploy a full-stack app or static site on Run402
+const HELP = `run402 deploy — Deploy to an existing project on Run402
 
 Usage:
   run402 deploy [options]
@@ -9,11 +9,12 @@ Usage:
 
 Options:
   --manifest <file>    Path to manifest JSON file  (default: read from stdin)
+  --project <id>       Project ID to deploy to     (default: active project)
   --help, -h           Show this help message
 
 Manifest format (JSON):
   {
-    "name": "my-app",
+    "project_id": "prj_...",
     "migrations": "CREATE TABLE items (id serial PRIMARY KEY, title text NOT NULL, done boolean DEFAULT false)",
     "rls": {
       "template": "public_read_write",
@@ -28,7 +29,8 @@ Manifest format (JSON):
     "subdomain": "my-app"
   }
 
-  All fields except "name" are optional.
+  project_id is required (provision first with 'run402 provision').
+  All other fields are optional.
 
   RLS templates:
     user_owns_rows   — users see only their rows (requires owner_column per table)
@@ -40,16 +42,18 @@ Manifest format (JSON):
 
 Examples:
   run402 deploy --manifest app.json
+  run402 deploy --manifest app.json --project prj_123_1
   cat app.json | run402 deploy
 
 Prerequisites:
   - run402 init                     Set up allowance and funding
   - run402 tier set prototype       Subscribe to a tier
+  - run402 provision                Provision a project first
 
 Notes:
   - Requires an active tier subscription (run402 tier set <tier>)
-  - Project credentials (project_id, keys, URL) are saved locally after deploy
-  - Use 'run402 projects list' to see all deployed projects
+  - Provision a project first with 'run402 provision', then deploy to it
+  - Use 'run402 projects list' to see all provisioned projects
 `;
 
 async function readStdin() {
@@ -59,25 +63,30 @@ async function readStdin() {
 }
 
 export async function run(args) {
-  const opts = { manifest: null };
+  const opts = { manifest: null, project: null };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--help" || args[i] === "-h") { console.log(HELP); process.exit(0); }
     if (args[i] === "--manifest" && args[i + 1]) opts.manifest = args[++i];
+    if (args[i] === "--project" && args[i + 1]) opts.project = args[++i];
   }
 
   const manifest = opts.manifest ? JSON.parse(readFileSync(opts.manifest, "utf-8")) : JSON.parse(await readStdin());
+
+  // --project flag overrides manifest's project_id
+  if (opts.project) manifest.project_id = opts.project;
+
+  // If no project_id in manifest, use active project
+  if (!manifest.project_id) {
+    const { id } = findProject(null);
+    manifest.project_id = id;
+  }
+
+  // Remove legacy 'name' field if present
+  delete manifest.name;
 
   const authHeaders = allowanceAuthHeaders("/deploy/v1");
   const res = await fetch(`${API}/deploy/v1`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders }, body: JSON.stringify(manifest) });
   const result = await res.json();
   if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...result })); process.exit(1); }
-  if (result.project_id) {
-    saveProject(result.project_id, {
-      anon_key: result.anon_key, service_key: result.service_key,
-      site_url: result.site_url || result.subdomain_url,
-      deployed_at: new Date().toISOString(),
-    });
-    setActiveProjectId(result.project_id);
-  }
   console.log(JSON.stringify(result, null, 2));
 }

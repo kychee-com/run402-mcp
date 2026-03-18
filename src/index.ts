@@ -239,7 +239,7 @@ server.tool(
 
 server.tool(
   "bundle_deploy",
-  "One-call full-stack app deployment. Provisions a database and optionally runs migrations, applies RLS, sets secrets, deploys functions, deploys a static site, and claims a subdomain. Free with active tier.",
+  "Deploy to an existing project. Runs migrations, applies RLS, sets secrets, deploys functions, deploys a static site, and claims a subdomain. Requires a provisioned project_id. Free with active tier.",
   bundleDeploySchema,
   async (args) => handleBundleDeploy(args),
 );
