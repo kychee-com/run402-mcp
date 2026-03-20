@@ -9,6 +9,7 @@ export interface AllowanceData {
   created?: string;
   funded?: boolean;
   lastFaucet?: string;
+  rail?: "x402" | "mpp";
 }
 
 export function readAllowance(path?: string): AllowanceData | null {

@@ -6,24 +6,25 @@ Usage:
   run402 allowance <subcommand>
 
 Subcommands:
-  status    Show allowance address, network, and funding status
+  status    Show allowance address, network, rail, and funding status
   create    Generate a new allowance and save it locally
-  fund      Request test USDC from the Run402 faucet (Base Sepolia)
-  balance   Show on-chain USDC (mainnet + testnet) and Run402 billing balance
+  fund      Request test funds from the faucet (Base Sepolia or Tempo)
+  balance   Show on-chain balances and Run402 billing balance
   export    Print the allowance address (useful for scripting)
   checkout  Create a billing checkout session (--amount <usd_micros>)
   history   View billing transaction history (--limit <n>)
 
 Notes:
-  - Agent allowance is stored locally at ~/.run402/allowance.json
-  - The allowance works on any EVM chain (currently Run402 uses Base Mainnet and Sepolia for testnet)
-  - You need to create and fund an allowance before any x402 transaction with Run402
+  - Agent allowance is stored locally at ~/.config/run402/allowance.json
+  - The allowance works on any EVM chain (Base for x402, Tempo for MPP)
+  - Use 'run402 init' for x402 or 'run402 init mpp' for MPP rail
 
 Examples:
   run402 allowance create
   run402 allowance status
   run402 allowance fund
   run402 allowance export
+  run402 allowance balance
   run402 allowance checkout --amount 5000000
   run402 allowance history --limit 10
 `;
@@ -31,12 +32,20 @@ Examples:
 const USDC_ABI = [{ name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] }];
 const USDC_MAINNET = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const USDC_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+const PATH_USD = "0x20c0000000000000000000000000000000000000";
+const TEMPO_RPC = "https://rpc.moderato.tempo.xyz/";
 
 async function loadDeps() {
   const { generatePrivateKey, privateKeyToAccount } = await import("viem/accounts");
-  const { createPublicClient, http } = await import("viem");
+  const { createPublicClient, http, defineChain } = await import("viem");
   const { base, baseSepolia } = await import("viem/chains");
-  return { generatePrivateKey, privateKeyToAccount, createPublicClient, http, base, baseSepolia };
+  const tempoModerato = defineChain({
+    id: 42431,
+    name: "Tempo Moderato",
+    nativeCurrency: { name: "pathUSD", symbol: "pathUSD", decimals: 6 },
+    rpcUrls: { default: { http: [TEMPO_RPC] } },
+  });
+  return { generatePrivateKey, privateKeyToAccount, createPublicClient, http, base, baseSepolia, tempoModerato };
 }
 
 async function status() {
@@ -45,7 +54,7 @@ async function status() {
     console.log(JSON.stringify({ status: "no_wallet", message: "No agent allowance found. Run: run402 allowance create" }));
     return;
   }
-  console.log(JSON.stringify({ status: "ok", address: w.address, created: w.created, funded: w.funded || false, path: ALLOWANCE_FILE }));
+  console.log(JSON.stringify({ status: "ok", address: w.address, created: w.created, funded: w.funded || false, rail: w.rail || "x402", path: ALLOWANCE_FILE }));
 }
 
 async function create() {
@@ -64,6 +73,37 @@ async function fund() {
   const w = readAllowance();
   if (!w) { console.log(JSON.stringify({ status: "error", message: "No agent allowance. Run: run402 allowance create" })); process.exit(1); }
 
+  if (w.rail === "mpp") {
+    // Tempo Moderato faucet — instant, no polling needed
+    const { createPublicClient, http, tempoModerato } = await loadDeps();
+    const client = createPublicClient({ chain: tempoModerato, transport: http() });
+    const before = await readUsdcBalance(client, PATH_USD, w.address).catch(() => 0);
+
+    const res = await fetch(TEMPO_RPC, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", method: "tempo_fundAddress", params: [w.address], id: 1 }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      console.log(JSON.stringify({ status: "error", message: data.error.message || "Tempo faucet failed" }));
+      process.exit(1);
+    }
+
+    // Re-read balance once (instant confirmation)
+    const now = await readUsdcBalance(client, PATH_USD, w.address).catch(() => before);
+    saveAllowance({ ...w, funded: true, lastFaucet: new Date().toISOString() });
+    console.log(JSON.stringify({
+      address: w.address,
+      rail: "mpp",
+      onchain: {
+        "tempo-moderato_pathusd_micros": now,
+      },
+    }, null, 2));
+    return;
+  }
+
+  // Default: Base Sepolia faucet (existing behavior)
   const { createPublicClient, http, baseSepolia } = await loadDeps();
   const client = createPublicClient({ chain: baseSepolia, transport: http() });
   const before = await readUsdcBalance(client, USDC_SEPOLIA, w.address).catch(() => 0);
@@ -83,6 +123,7 @@ async function fund() {
       saveAllowance({ ...w, funded: true, lastFaucet: new Date().toISOString() });
       console.log(JSON.stringify({
         address: w.address,
+        rail: w.rail || "x402",
         onchain: {
           "base-sepolia_usd_micros": now,
         },
@@ -104,13 +145,15 @@ async function balance() {
   const w = readAllowance();
   if (!w) { console.log(JSON.stringify({ status: "error", message: "No agent allowance. Run: run402 allowance create" })); process.exit(1); }
 
-  const { createPublicClient, http, base, baseSepolia } = await loadDeps();
+  const { createPublicClient, http, base, baseSepolia, tempoModerato } = await loadDeps();
   const mainnetClient = createPublicClient({ chain: base, transport: http() });
   const sepoliaClient = createPublicClient({ chain: baseSepolia, transport: http() });
+  const tempoClient = createPublicClient({ chain: tempoModerato, transport: http() });
 
-  const [mainnetUsdc, sepoliaUsdc, billingRes] = await Promise.all([
+  const [mainnetUsdc, sepoliaUsdc, tempoPathUsd, billingRes] = await Promise.all([
     readUsdcBalance(mainnetClient, USDC_MAINNET, w.address).catch(() => null),
     readUsdcBalance(sepoliaClient, USDC_SEPOLIA, w.address).catch(() => null),
+    readUsdcBalance(tempoClient, PATH_USD, w.address).catch(() => null),
     fetch(`${API}/billing/v1/accounts/${w.address.toLowerCase()}`),
   ]);
 
@@ -118,9 +161,11 @@ async function balance() {
 
   console.log(JSON.stringify({
     address: w.address,
+    rail: w.rail || "x402",
     onchain: {
       "base-mainnet_usd_micros": mainnetUsdc,
       "base-sepolia_usd_micros": sepoliaUsdc,
+      "tempo-moderato_pathusd_micros": tempoPathUsd,
     },
     run402: billing ? { balance_usd_micros: billing.available_usd_micros } : "no billing account",
   }, null, 2));

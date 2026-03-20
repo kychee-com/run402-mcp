@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 import { run } from "../../cli/lib/init.mjs";
-await run();
+await run(process.argv.slice(2));

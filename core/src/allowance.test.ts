@@ -54,4 +54,22 @@ describe("allowance", () => {
     const parsed = JSON.parse(raw);
     assert.equal(parsed.address, "0xabc");
   });
+
+  it("round-trips rail field", () => {
+    const allowance: AllowanceData = {
+      address: "0xtest",
+      privateKey: "0xpk",
+      rail: "mpp",
+    };
+    saveAllowance(allowance, allowancePath);
+    const loaded = readAllowance(allowancePath);
+    assert.equal(loaded?.rail, "mpp");
+  });
+
+  it("missing rail field reads as undefined", () => {
+    const allowance: AllowanceData = { address: "0xtest", privateKey: "0xpk" };
+    saveAllowance(allowance, allowancePath);
+    const loaded = readAllowance(allowancePath);
+    assert.equal(loaded?.rail, undefined);
+  });
 });
