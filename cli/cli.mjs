@@ -44,7 +44,7 @@ Examples:
   run402 deploy --manifest app.json
   run402 projects list
   run402 projects sql <project_id> "SELECT * FROM users LIMIT 5"
-  run402 functions deploy <project_id> my-fn --code handler.ts
+  run402 functions deploy <project_id> my-fn --file handler.ts
   run402 secrets set <project_id> API_KEY sk-1234
   run402 image generate "a startup mascot, pixel art" --output logo.png
 

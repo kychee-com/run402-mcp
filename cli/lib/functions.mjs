@@ -7,7 +7,7 @@ Usage:
   run402 functions <subcommand> [args...]
 
 Subcommands:
-  deploy <id> <name> --code <file> [--timeout <s>] [--memory <mb>] [--deps <pkg,...>]
+  deploy <id> <name> --file <file> [--timeout <s>] [--memory <mb>] [--deps <pkg,...>]
                                        Deploy a function to a project
   invoke <id> <name> [--method <M>] [--body <json>]
                                        Invoke a deployed function
@@ -16,7 +16,7 @@ Subcommands:
   delete <id> <name>                   Delete a function
 
 Examples:
-  run402 functions deploy abc123 stripe-webhook --code handler.ts
+  run402 functions deploy abc123 stripe-webhook --file handler.ts
   run402 functions invoke abc123 stripe-webhook --body '{"event":"test"}'
   run402 functions logs abc123 stripe-webhook --tail 100
   run402 functions list abc123
@@ -49,15 +49,15 @@ async function setupPaidFetch() {
 
 async function deploy(projectId, name, args) {
   const p = findProject(projectId);
-  const opts = { code: null, timeout: undefined, memory: undefined, deps: undefined };
+  const opts = { file: null, timeout: undefined, memory: undefined, deps: undefined };
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--code" && args[i + 1]) opts.code = args[++i];
+    if (args[i] === "--file" && args[i + 1]) opts.file = args[++i];
     if (args[i] === "--timeout" && args[i + 1]) opts.timeout = parseInt(args[++i]);
     if (args[i] === "--memory" && args[i + 1]) opts.memory = parseInt(args[++i]);
     if (args[i] === "--deps" && args[i + 1]) opts.deps = args[++i].split(",");
   }
-  if (!opts.code) { console.error(JSON.stringify({ status: "error", message: "Missing --code <file>" })); process.exit(1); }
-  const code = readFileSync(opts.code, "utf-8");
+  if (!opts.file) { console.error(JSON.stringify({ status: "error", message: "Missing --file <file>" })); process.exit(1); }
+  const code = readFileSync(opts.file, "utf-8");
   const body = { name, code };
   if (opts.timeout || opts.memory) body.config = {};
   if (opts.timeout) body.config.timeout = opts.timeout;

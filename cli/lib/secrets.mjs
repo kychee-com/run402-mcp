@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { findProject, API } from "./config.mjs";
 
 const HELP = `run402 secrets — Manage project secrets
@@ -6,12 +7,13 @@ Usage:
   run402 secrets <subcommand> [args...]
 
 Subcommands:
-  set    <id> <key> <value>    Set a secret on a project
+  set    <id> <key> <value> [--file <path>]  Set a secret on a project
   list   <id>                  List all secrets for a project
   delete <id> <key>            Delete a secret from a project
 
 Examples:
   run402 secrets set abc123 STRIPE_KEY sk-1234
+  run402 secrets set abc123 TLS_CERT --file cert.pem
   run402 secrets list abc123
   run402 secrets delete abc123 STRIPE_KEY
 
@@ -20,12 +22,20 @@ Notes:
   - Values are never shown after being set
 `;
 
-async function set(projectId, key, value) {
+async function set(projectId, key, args = []) {
   const p = findProject(projectId);
+  let file = null;
+  let value = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--file" && args[i + 1]) { file = args[++i]; }
+    else if (!value && !args[i].startsWith("--")) { value = args[i]; }
+  }
+  const val = file ? readFileSync(file, "utf-8") : value;
+  if (!val) { console.error(JSON.stringify({ status: "error", message: "Missing secret value. Provide inline or use --file <path>" })); process.exit(1); }
   const res = await fetch(`${API}/projects/v1/admin/${projectId}/secrets`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${p.service_key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ key, value }),
+    body: JSON.stringify({ key, value: val }),
   });
   const data = await res.json();
   if (!res.ok) { console.error(JSON.stringify({ status: "error", http: res.status, ...data })); process.exit(1); }
@@ -59,7 +69,7 @@ async function deleteSecret(projectId, key) {
 export async function run(sub, args) {
   if (!sub || sub === '--help' || sub === '-h') { console.log(HELP); process.exit(0); }
   switch (sub) {
-    case "set":    await set(args[0], args[1], args[2]); break;
+    case "set":    await set(args[0], args[1], args.slice(2)); break;
     case "list":   await list(args[0]); break;
     case "delete": await deleteSecret(args[0], args[1]); break;
     default:

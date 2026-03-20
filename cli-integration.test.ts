@@ -289,7 +289,7 @@ describe("CLI integration (live API, no mocks)", { timeout: 180_000 }, () => {
     const codePath = join(tempDir, "handler.mjs");
     writeFileSync(codePath, 'export default async (req) => new Response(JSON.stringify({ hello: "world" }), { headers: { "Content-Type": "application/json" } })');
     captureStart();
-    await run("deploy", [projectId, "hello", "--code", codePath]);
+    await run("deploy", [projectId, "hello", "--file", codePath]);
     captureStop();
     assert.ok(captured().includes("hello"), "should deploy function");
   });

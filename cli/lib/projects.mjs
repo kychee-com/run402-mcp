@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { findProject, loadKeyStore, saveProject, removeProject, API, allowanceAuthHeaders, setActiveProjectId, getActiveProjectId } from "./config.mjs";
 
 const HELP = `run402 projects — Manage your deployed Run402 projects
@@ -12,7 +13,7 @@ Subcommands:
   list                                    List all your projects (IDs, URLs, active marker)
   info  <id>                              Show project details: REST URL, keys
   keys  <id>                              Print anon_key and service_key as JSON
-  sql   <id> "<query>"                    Run a SQL query against a project's Postgres DB
+  sql   <id> "<query>" [--file <path>]     Run a SQL query against a project's Postgres DB
   rest  <id> <table> [params]             Query a table via the REST API (PostgREST)
   usage <id>                              Show compute/storage usage for a project
   schema <id>                             Inspect the database schema
@@ -28,6 +29,7 @@ Examples:
   run402 projects list
   run402 projects info abc123
   run402 projects sql abc123 "SELECT * FROM users LIMIT 5"
+  run402 projects sql abc123 --file setup.sql
   run402 projects rest abc123 users "limit=10&select=id,name"
   run402 projects usage abc123
   run402 projects schema abc123
@@ -115,9 +117,17 @@ async function keys(projectId) {
   console.log(JSON.stringify({ project_id: projectId, anon_key: p.anon_key, service_key: p.service_key }, null, 2));
 }
 
-async function sqlCmd(projectId, query) {
+async function sqlCmd(projectId, args = []) {
   const p = findProject(projectId);
-  const res = await fetch(`${API}/projects/v1/admin/${projectId}/sql`, { method: "POST", headers: { "Authorization": `Bearer ${p.service_key}`, "Content-Type": "text/plain" }, body: query });
+  let file = null;
+  let query = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--file" && args[i + 1]) { file = args[++i]; }
+    else if (!query && !args[i].startsWith("--")) { query = args[i]; }
+  }
+  const sql = file ? readFileSync(file, "utf-8") : query;
+  if (!sql) { console.error(JSON.stringify({ status: "error", message: "Missing SQL query. Provide inline or use --file <path>" })); process.exit(1); }
+  const res = await fetch(`${API}/projects/v1/admin/${projectId}/sql`, { method: "POST", headers: { "Authorization": `Bearer ${p.service_key}`, "Content-Type": "text/plain" }, body: sql });
   console.log(JSON.stringify(await res.json(), null, 2));
 }
 
@@ -193,7 +203,7 @@ export async function run(sub, args) {
     case "list":      await list(); break;
     case "info":      await info(args[0]); break;
     case "keys":      await keys(args[0]); break;
-    case "sql":       await sqlCmd(args[0], args[1]); break;
+    case "sql":       await sqlCmd(args[0], args.slice(1)); break;
     case "rest":      await rest(args[0], args[1], args[2]); break;
     case "usage":     await usage(args[0]); break;
     case "schema":    await schema(args[0]); break;

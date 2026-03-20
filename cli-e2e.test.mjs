@@ -497,6 +497,17 @@ describe("CLI e2e happy path", () => {
     assert.ok(captured().includes("test"), "should return query results");
   });
 
+  it("projects sql --file", async () => {
+    const { run } = await import("./cli/lib/projects.mjs");
+    const { writeFileSync: wf } = await import("node:fs");
+    const sqlPath = join(tempDir, "query.sql");
+    wf(sqlPath, "SELECT * FROM items");
+    captureStart();
+    await run("sql", ["prj_test123", "--file", sqlPath]);
+    captureStop();
+    assert.ok(captured().includes("test"), "should return query results from file");
+  });
+
   it("projects rest", async () => {
     const { run } = await import("./cli/lib/projects.mjs");
     captureStart();
@@ -575,7 +586,7 @@ describe("CLI e2e happy path", () => {
     const { writeFileSync: wf } = await import("node:fs");
     wf(codePath, 'export default async (req) => new Response("ok")');
     captureStart();
-    await run("deploy", ["prj_test123", "hello", "--code", codePath]);
+    await run("deploy", ["prj_test123", "hello", "--file", codePath]);
     captureStop();
     assert.ok(captured().includes("hello"), "should deploy function");
   });
@@ -612,6 +623,17 @@ describe("CLI e2e happy path", () => {
     await run("set", ["prj_test123", "TEST_KEY", "secret_value"]);
     captureStop();
     assert.ok(captured().includes("ok"), "should set secret");
+  });
+
+  it("secrets set --file", async () => {
+    const { run } = await import("./cli/lib/secrets.mjs");
+    const { writeFileSync: wf } = await import("node:fs");
+    const valPath = join(tempDir, "secret.txt");
+    wf(valPath, "file_secret_value");
+    captureStart();
+    await run("set", ["prj_test123", "FILE_KEY", "--file", valPath]);
+    captureStop();
+    assert.ok(captured().includes("ok"), "should set secret from file");
   });
 
   it("secrets list", async () => {
